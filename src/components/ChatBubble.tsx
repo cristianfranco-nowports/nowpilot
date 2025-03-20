@@ -1,11 +1,78 @@
 import React from 'react';
-import { ChatMessage } from '../types/chat';
+import { ChatMessage, DocumentAttachment } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
 
 interface ChatBubbleProps {
   message: ChatMessage;
   theme?: 'light' | 'dark';
 }
+
+const DocumentPreview: React.FC<{ document: DocumentAttachment; theme: 'light' | 'dark' }> = ({ document, theme }) => {
+  const getIconByType = (type: string) => {
+    if (type.includes('pdf')) {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      );
+    } else if (type.includes('doc')) {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      );
+    } else if (type.includes('image') || type.includes('jpg') || type.includes('jpeg') || type.includes('png')) {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      );
+    } else {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      );
+    }
+  };
+
+  const themeClasses = {
+    light: 'bg-white border-gray-200 text-gray-800',
+    dark: 'bg-gray-700 border-gray-600 text-gray-100'
+  };
+
+  return (
+    <div className={`border rounded-lg p-3 mt-2 flex items-center ${themeClasses[theme]}`}>
+      <div className="mr-3 flex-shrink-0">
+        {getIconByType(document.type)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <h4 className="text-sm font-medium truncate">{document.name}</h4>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{(document.size / 1024).toFixed(1)} KB</p>
+      </div>
+      <div className="ml-3">
+        <a 
+          href={document.url || '#'} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className={`inline-flex items-center px-3 py-1 border border-transparent text-xs leading-4 font-medium rounded-md ${
+            theme === 'light' 
+              ? 'text-blue-700 bg-blue-100 hover:bg-blue-200' 
+              : 'text-blue-300 bg-blue-900/30 hover:bg-blue-800/50'
+          } transition duration-150 ease-in-out`}
+          onClick={(e) => {
+            if (!document.url) {
+              e.preventDefault();
+              alert('En un escenario real, este enlace descargaría o abriría el documento.');
+            }
+          }}
+        >
+          Ver
+        </a>
+      </div>
+    </div>
+  );
+};
 
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => {
   const isUser = message.role === 'user';
@@ -51,6 +118,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => 
   const bubbleStyles = isUser
     ? `max-w-[80%] rounded-2xl rounded-tr-sm px-4 py-2 ${themeStyles.user[theme]} shadow-sm`
     : `max-w-[80%] rounded-2xl rounded-tl-sm px-4 py-2 ${themeStyles.assistant[theme]} shadow-sm`;
+
+  const hasAttachments = message.attachments && message.attachments.length > 0;
 
   return (
     <div className={containerStyles}>
@@ -103,6 +172,18 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => 
               >
                 {message.content}
               </ReactMarkdown>
+            </div>
+          )}
+          
+          {/* Documentos adjuntos */}
+          {hasAttachments && (
+            <div className={`mt-3 ${isUser ? 'border-t border-blue-500' : 'border-t border-gray-300'} pt-2`}>
+              <p className={`text-xs mb-2 ${isUser ? 'text-blue-200' : theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                Documentos adjuntos:
+              </p>
+              {message.attachments?.map((doc) => (
+                <DocumentPreview key={doc.id} document={doc} theme={theme} />
+              ))}
             </div>
           )}
         </div>
