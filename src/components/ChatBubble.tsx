@@ -10,11 +10,21 @@ interface ChatBubbleProps {
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => {
   const isUser = message.role === 'user';
   
-  // Format timestamp
-  const formattedTime = new Date(message.timestamp).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  // Format timestamp safely
+  let formattedTime = '';
+  try {
+    const timestamp = Number(message.timestamp) || Date.parse(message.timestamp);
+    if (!isNaN(timestamp)) {
+      formattedTime = new Date(timestamp).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } else {
+      formattedTime = 'Ahora';
+    }
+  } catch (e) {
+    formattedTime = 'Ahora';
+  }
   
   // Define theme styles
   const themeStyles = {
