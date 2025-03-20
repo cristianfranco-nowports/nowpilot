@@ -4,9 +4,9 @@ export type MessageRole = 'user' | 'assistant' | 'system';
 
 export interface ChatMessage {
   id: string;
-  content: string;
   role: MessageRole;
-  timestamp: number;
+  content: string;
+  timestamp: string;
 }
 
 export interface ChatState {

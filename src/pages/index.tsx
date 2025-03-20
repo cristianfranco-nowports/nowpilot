@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import styles from '../styles/Home.module.css';
 
 // Define interface for chat messages
@@ -126,7 +127,12 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>Nowports Sales Assistant</h1>
+        <h1 className={styles.title}>
+          Nowports Sales Assistant
+          <Link href="/widget">
+            <a className="ml-4 text-sm text-blue-500 hover:text-blue-700">Ver widget</a>
+          </Link>
+        </h1>
         <p className={styles.description}>
           Powered by AI to help with your logistics needs
         </p>
