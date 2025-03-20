@@ -178,31 +178,95 @@ Con esta información, uno de nuestros ejecutivos preparará una cotización det
   // Extract potential origin and destination locations
   const possibleLocations = extractLocations(messageLower);
   
-  // Check if we need to use special route information
-  if (possibleLocations.length >= 2) {
-    console.log('Found multiple locations, checking for special routes');
+  // Check for route information requests
+  if (possibleLocations.length >= 2 || 
+      (messageLower.includes('ruta') || messageLower.includes('envío') || 
+       messageLower.includes('enviar') || messageLower.includes('transportar') || 
+       messageLower.includes('envio') || messageLower.includes('transporte'))) {
     
-    // Try all combinations of locations as origin/destination
-    for (let i = 0; i < possibleLocations.length; i++) {
-      for (let j = 0; j < possibleLocations.length; j++) {
-        if (i !== j) {
-          const origin = possibleLocations[i];
-          const destination = possibleLocations[j];
-          
-          // Check for special route information
-          const specialRouteInfo = getSpecialRouteInfo(origin, destination);
-          if (specialRouteInfo) {
-            console.log(`Found special route info for ${origin} to ${destination}`);
-            
-            // Save context about this route query
-            session.context.lastIntention = 'quote_request';
-            session.context.lastRoute = { origin, destination };
-            session.context.awaitingResponse = true;
-            
-            return specialRouteInfo;
+    console.log('Detected route request');
+    
+    // Try to identify origin and destination
+    let origin = '';
+    let destination = '';
+    
+    // If we have explicit locations, use them
+    if (possibleLocations.length >= 2) {
+      // Try to determine which is origin and which is destination based on prepositions
+      // This is a simple heuristic and might need improvement
+      const messageWords = messageLower.split(' ');
+      for (let i = 0; i < messageWords.length; i++) {
+        if ((messageWords[i] === 'de' || messageWords[i] === 'desde') && i + 1 < messageWords.length) {
+          // Look for a location after "de" or "desde"
+          for (const loc of possibleLocations) {
+            if (messageWords.slice(i + 1, i + 5).join(' ').includes(loc.toLowerCase())) {
+              origin = loc;
+              break;
+            }
+          }
+        } else if ((messageWords[i] === 'a' || messageWords[i] === 'hacia' || messageWords[i] === 'para') && i + 1 < messageWords.length) {
+          // Look for a location after "a", "hacia" or "para"
+          for (const loc of possibleLocations) {
+            if (messageWords.slice(i + 1, i + 5).join(' ').includes(loc.toLowerCase())) {
+              destination = loc;
+              break;
+            }
           }
         }
       }
+      
+      // If we couldn't determine using prepositions, just use the first two locations
+      if (!origin && !destination && possibleLocations.length >= 2) {
+        origin = possibleLocations[0];
+        destination = possibleLocations[1];
+      } else if (origin && !destination && possibleLocations.length >= 2) {
+        // If we have origin but no destination, find a location that's not the origin
+        for (const loc of possibleLocations) {
+          if (loc !== origin) {
+            destination = loc;
+            break;
+          }
+        }
+      } else if (!origin && destination && possibleLocations.length >= 2) {
+        // If we have destination but no origin, find a location that's not the destination
+        for (const loc of possibleLocations) {
+          if (loc !== destination) {
+            origin = loc;
+            break;
+          }
+        }
+      }
+    }
+    
+    // Save context about this route query
+    session.context.lastIntention = 'quote_request';
+    if (origin && destination) {
+      session.context.lastRoute = { origin, destination };
+    }
+    session.context.awaitingResponse = true;
+
+    // Provide multimodal options for any route
+    // Format: Generate options based on origin and destination or provide generic options
+    if (origin && destination) {
+      return generateMultimodalOptions(origin, destination);
+    } else {
+      // If we couldn't determine specific locations, ask for clarification but provide general info
+      return `Entiendo que está interesado en servicios de transporte. Para proporcionarle opciones específicas de rutas y tarifas, necesito conocer el origen y destino de su carga.
+
+Ofrecemos soluciones multimodales que combinan:
+
+1. 🚚 **Transporte terrestre** - Para movimientos locales o conexiones con puertos
+2. 🚢 **Transporte marítimo** - FCL (contenedor completo) o LCL (carga consolidada)
+3. ✈️ **Transporte aéreo** - Para envíos urgentes o de alto valor
+4. 🚂 **Transporte ferroviario** - Para rutas específicas con alta eficiencia
+
+Cada solución incluye:
+- Tarifas competitivas según el volumen y tipo de mercancía
+- Opciones de Incoterms adaptadas a sus necesidades (EXW, FOB, CIF, etc.)
+- Seguimiento en tiempo real de su carga
+- Gestión aduanal y trámites documentales
+
+¿Podría indicarme el origen y destino específicos de su carga para ofrecerle opciones más detalladas?`;
     }
   }
 
@@ -772,4 +836,55 @@ Nowports simplifica la logística internacional con tecnología y servicio perso
 // Helper function to check if message contains any of the keywords
 function containsAny(message: string, keywords: string[]): boolean {
   return keywords.some(keyword => message.includes(keyword));
+}
+
+/**
+ * Generates multimodal transportation options for a given origin and destination
+ */
+function generateMultimodalOptions(origin: string, destination: string): string {
+  // Check if we have special route information first
+  const specialRouteInfo = getSpecialRouteInfo(origin, destination);
+  if (specialRouteInfo) {
+    return specialRouteInfo;
+  }
+  
+  // Generic multimodal options based on the origin and destination
+  let options = `Para su envío de **${origin}** a **${destination}**, le ofrecemos las siguientes opciones multimodales:
+
+## Opción 1: Solución Estándar
+**Ruta:** ${origin} → ${destination}
+- **Tiempo de tránsito estimado:** 15-20 días
+- **Costo aproximado:** $1,800-2,400 USD (contenedor de 20')
+- **Incluye:** Transporte terrestre en origen y destino + transporte marítimo principal
+- **Incoterm recomendado:** CIF o FOB
+- **Documentación:** BL, factura comercial, packing list, certificado de origen
+
+## Opción 2: Solución Express
+**Ruta:** ${origin} → ${destination} (vía aérea)
+- **Tiempo de tránsito estimado:** 4-6 días
+- **Costo aproximado:** $4.50-6.00 USD por kg
+- **Incluye:** Pick-up en origen, transporte aéreo, entrega en destino
+- **Incoterm recomendado:** DDP o DAP
+- **Documentación:** AWB, factura comercial, packing list
+
+## Opción 3: Solución Multimodal Optimizada
+**Ruta:** 
+1. ${origin} → [Puerto/Aeropuerto cercano] (terrestre)
+2. [Puerto/Aeropuerto cercano] → [Puerto/Aeropuerto destino] (marítimo/aéreo)
+3. [Puerto/Aeropuerto destino] → ${destination} (terrestre)
+- **Tiempo de tránsito estimado:** 12-18 días
+- **Costo aproximado:** $2,100-2,800 USD (contenedor de 20')
+- **Incluye:** Gestión aduanal en origen y destino, seguro de carga
+- **Incoterm recomendado:** DDP (entrega con derechos pagados)
+
+### Servicios adicionales disponibles:
+- 🔒 Seguro de carga integral (0.35% - 0.5% del valor declarado)
+- 📦 Almacenaje temporal en origen o destino
+- 📋 Gestión documental completa
+- 🛃 Despacho aduanal prioritario
+- 📱 Tracking en tiempo real
+
+¿Cuál de estas opciones se ajusta mejor a sus necesidades? ¿O prefiere que elaboremos una solución más personalizada para su caso específico?`;
+
+  return options;
 } 
