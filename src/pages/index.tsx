@@ -1,113 +1,196 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import { useState, useRef, useEffect } from 'react';
+import Head from 'next/head';
+import styles from '../styles/Home.module.css';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Define interface for chat messages
+interface ChatMessage {
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+}
 
 export default function Home() {
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Initial greeting when component mounts
+  useEffect(() => {
+    setMessages([
+      { 
+        text: '¡Hola! Soy el asistente de ventas de Nowports. ¿Cómo puedo ayudarle con sus necesidades logísticas hoy?', 
+        isUser: false, 
+        timestamp: new Date() 
+      }
+    ]);
+  }, []);
+
+  // Scroll to bottom of chat whenever messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!input.trim()) return;
+    
+    // Add user message to chat
+    const userMessage: ChatMessage = {
+      text: input,
+      isUser: true,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setLoading(true);
+    setInput('');
+    
+    try {
+      console.log('Sending request to API with message:', input);
+      
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: input,
+          sessionId,
+        }),
+      });
+      
+      console.log('Response status:', response.status);
+      
+      // Intenta obtener el texto de la respuesta primero para depuración
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+      
+      // Convierte el texto a JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed data:', data);
+      } catch (parseError) {
+        console.error('Error parsing JSON:', parseError);
+        throw new Error(`Failed to parse JSON: ${responseText}`);
+      }
+      
+      if (response.ok) {
+        // Save session ID if we got one
+        if (data.sessionId) {
+          setSessionId(data.sessionId);
+        }
+        
+        // Add assistant message to chat
+        const assistantMessage: ChatMessage = {
+          text: data.response,
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        console.error('API returned error:', data);
+        // Handle error with more details
+        setMessages(prev => [...prev, {
+          text: `Error del servidor: ${data.error || 'Desconocido'}. Por favor, inténtelo de nuevo.`,
+          isUser: false,
+          timestamp: new Date()
+        }]);
+      }
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, {
+        text: `Error de conexión: ${error.message}. Por favor, compruebe su conexión e inténtelo de nuevo.`,
+        isUser: false,
+        timestamp: new Date()
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  function formatTimestamp(date: Date) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/pages/index.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <div className={styles.container}>
+      <Head>
+        <title>Nowports Sales Assistant</title>
+        <meta name="description" content="Powered by AI to help with your logistics needs" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <main className={styles.main}>
+        <h1 className={styles.title}>Nowports Sales Assistant</h1>
+        <p className={styles.description}>
+          Powered by AI to help with your logistics needs
+        </p>
+
+        <div className={styles.chatContainer}>
+          <div className={styles.chatHeader}>
+            <h2>Nowports Sales Assistant</h2>
+            <p>Ask me about logistics, shipping routes, and how Nowports can help your business</p>
+          </div>
+
+          <div className={styles.messagesContainer}>
+            {messages.map((message, index) => (
+              <div 
+                key={index} 
+                className={`${styles.messageWrapper} ${message.isUser ? styles.userMessageWrapper : styles.assistantMessageWrapper}`}
+              >
+                <div 
+                  className={`${styles.message} ${message.isUser ? styles.userMessage : styles.assistantMessage}`}
+                >
+                  {message.text?.split('\n').map((text, i) => (
+                    <p key={i}>{text}</p>
+                  ))}
+                  <span className={styles.timestamp}>{formatTimestamp(message.timestamp)}</span>
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className={`${styles.messageWrapper} ${styles.assistantMessageWrapper}`}>
+                <div className={`${styles.message} ${styles.assistantMessage}`}>
+                  <div className={styles.typingIndicator}>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <form onSubmit={handleSubmit} className={styles.inputContainer}>
+            <textarea
+              className={styles.chatInput}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Escriba su mensaje aquí..."
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <button 
+              type="submit" 
+              className={styles.sendButton}
+              disabled={loading || !input.trim()}
+            >
+              Enviar
+            </button>
+          </form>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
-}
+} 
