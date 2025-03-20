@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import uuidv4 from 'uuid-v4';
+import { v4 as uuidv4 } from 'uuid';
 import { companies, routes, tariffs } from '../../lib/data';
 import { Route, Tariff, Company } from '../../lib/data';
 import { getGeminiResponse, getSpecialRouteInfo } from '../../lib/gemini';
