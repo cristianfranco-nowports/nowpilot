@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import { ChatMessage, ChatState } from '../types/chat';
+import { v4 as uuidv4 } from 'uuid';
 
 const ChatContainer: React.FC = () => {
   const [chatState, setChatState] = useState<ChatState>({
@@ -23,10 +24,10 @@ const ChatContainer: React.FC = () => {
   // Add a welcome message when the component mounts
   useEffect(() => {
     const welcomeMessage: ChatMessage = {
-      id: 'welcome',
+      id: 'welcome-msg',
       content: 'Hello! I\'m the Nowports sales assistant. How can I help you with your logistics needs today?',
       role: 'assistant',
-      timestamp: Date.now(),
+      timestamp: Date.now().toString(),
     };
     
     setChatState((prev) => ({
@@ -40,10 +41,10 @@ const ChatContainer: React.FC = () => {
 
     // Create a new user message
     const userMessage: ChatMessage = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       content,
       role: 'user',
-      timestamp: Date.now(),
+      timestamp: Date.now().toString(),
     };
 
     // Update chat state with user message and show loading
@@ -82,10 +83,10 @@ const ChatContainer: React.FC = () => {
 
       // Create assistant message from the response
       const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+        id: uuidv4(),
         content: data.response,
         role: 'assistant',
-        timestamp: Date.now(),
+        timestamp: Date.now().toString(),
       };
 
       // Update chat state with assistant response

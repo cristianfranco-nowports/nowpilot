@@ -58,26 +58,26 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => 
             <div className="markdown text-sm">
               <ReactMarkdown 
                 components={{
-                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
-                  ul: ({ node, ...props }) => <ul className="mb-2 list-disc pl-4" {...props} />,
-                  ol: ({ node, ...props }) => <ol className="mb-2 list-decimal pl-4" {...props} />,
-                  li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props as React.HTMLAttributes<HTMLParagraphElement>} />,
+                  ul: ({ node, ...props }) => <ul className="mb-2 list-disc pl-4" {...props as React.HTMLAttributes<HTMLUListElement>} />,
+                  ol: ({ node, ...props }) => <ol className="mb-2 list-decimal pl-4" {...props as React.OlHTMLAttributes<HTMLOListElement>} />,
+                  li: ({ node, ...props }) => <li className="mb-1" {...props as React.LiHTMLAttributes<HTMLLIElement>} />,
                   a: ({ node, ...props }) => (
                     <a 
                       className={`underline ${theme === 'dark' ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600 hover:text-blue-800'}`} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      {...props} 
+                      {...props as React.AnchorHTMLAttributes<HTMLAnchorElement>} 
                     />
                   ),
-                  strong: ({ node, ...props }) => <strong className="font-bold" {...props} />,
-                  h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2" {...props} />,
-                  h2: ({ node, ...props }) => <h2 className="text-lg font-bold mb-2" {...props} />,
-                  h3: ({ node, ...props }) => <h3 className="text-md font-bold mb-2" {...props} />,
+                  strong: ({ node, ...props }) => <strong className="font-bold" {...props as React.HTMLAttributes<HTMLElement>} />,
+                  h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2" {...props as React.HTMLAttributes<HTMLHeadingElement>} />,
+                  h2: ({ node, ...props }) => <h2 className="text-lg font-bold mb-2" {...props as React.HTMLAttributes<HTMLHeadingElement>} />,
+                  h3: ({ node, ...props }) => <h3 className="text-md font-bold mb-2" {...props as React.HTMLAttributes<HTMLHeadingElement>} />,
                   blockquote: ({ node, ...props }) => (
                     <blockquote 
                       className={`border-l-4 ${theme === 'dark' ? 'border-gray-600 bg-gray-700/50' : 'border-gray-300 bg-gray-50'} pl-4 py-1 my-2`} 
-                      {...props} 
+                      {...props as React.BlockquoteHTMLAttributes<HTMLQuoteElement>} 
                     />
                   ),
                   code: ({ node, className, ...props }) => {
@@ -85,10 +85,10 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => 
                     const isInline = !className || !match;
                     
                     return isInline 
-                      ? <code className={`px-1 py-0.5 rounded ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`} {...props} />
-                      : <code className={`block p-2 my-2 rounded ${theme === 'dark' ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} overflow-x-auto ${className}`} {...props} />
+                      ? <code className={`px-1 py-0.5 rounded ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`} {...props as React.HTMLAttributes<HTMLElement>} />
+                      : <code className={`block p-2 my-2 rounded ${theme === 'dark' ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} overflow-x-auto ${className}`} {...props as React.HTMLAttributes<HTMLElement>} />
                   },
-                  pre: ({ node, ...props }) => <pre className="my-2" {...props} />,
+                  pre: ({ node, ...props }) => <pre className="my-2" {...props as React.HTMLAttributes<HTMLPreElement>} />,
                 }}
               >
                 {message.content}
