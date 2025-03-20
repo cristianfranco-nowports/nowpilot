@@ -151,14 +151,34 @@ Con esta información, uno de nuestros ejecutivos preparará una cotización det
       // If last intention was providing route information
       session.context.awaitingResponse = false;
       
-      return `¡Perfecto! Para brindarle la mejor asesoría sobre esta ruta, me gustaría conectarlo con uno de nuestros especialistas que podrá proporcionarle:
+      // Use route information if available, or generic placeholders
+      const origin = session.context.lastRoute?.origin || '';
+      const destination = session.context.lastRoute?.destination || '';
+      
+      return `Para la ruta solicitada entre ${origin || 'origen'} y ${destination || 'destino'}, puedo ofrecerle la siguiente información:
 
-• Fechas exactas de salida para las próximas semanas
-• Opciones de navieras con disponibilidad confirmada
-• Tarifas actualizadas con posibles promociones
-• Asesoría sobre documentación específica para su carga
+🚢 **Opciones de transporte disponibles:**
+• Transporte marítimo: Tiempo de tránsito estimado de 25-35 días
+• Transporte aéreo: Tiempo de tránsito de 3-5 días
+• Opciones multimodales disponibles según necesidades específicas
 
-¿Podría proporcionarme un correo electrónico o número telefónico donde nuestro especialista pueda contactarle? También puede comunicarse directamente a ventas@nowports.com o llamar al +52 (81) 3139 8851.`;
+📅 **Frecuencia de salidas:**
+• Salidas marítimas: Semanales desde principales puertos
+• Salidas aéreas: Diarias desde aeropuertos principales
+• Conexiones terrestres: Según programación
+
+💰 **Información de tarifas:**
+• Contenedor 20': $1,800-3,200 USD según temporada y disponibilidad
+• Contenedor 40': $2,500-4,500 USD según temporada y disponibilidad
+• Carga aérea: Desde $4.50/kg según volumen y urgencia
+
+📋 **Documentación requerida:**
+• Factura comercial
+• Packing list
+• Bill of Lading / Airway Bill
+• Certificado de origen (según tipo de mercancía)
+
+¿Necesita información más específica sobre algún aspecto de esta ruta? También puedo ayudarle con una cotización personalizada si me proporciona detalles de su carga.`;
     } else if (session.context.lastIntention === 'service_info') {
       // If last intention was providing service information  
       session.context.awaitingResponse = false;
