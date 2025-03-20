@@ -77,7 +77,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => 
                   blockquote: ({ node, ...props }) => (
                     <blockquote 
                       className={`border-l-4 ${theme === 'dark' ? 'border-gray-600 bg-gray-700/50' : 'border-gray-300 bg-gray-50'} pl-4 py-1 my-2`} 
-                      {...props as React.BlockquoteHTMLAttributes<HTMLQuoteElement>} 
+                      {...props} 
                     />
                   ),
                   code: ({ node, className, ...props }) => {
