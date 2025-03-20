@@ -4,7 +4,11 @@ import ChatInput from './ChatInput';
 import { ChatMessage, ChatState } from '../types/chat';
 import { v4 as uuidv4 } from 'uuid';
 
-const ChatContainer: React.FC = () => {
+interface ChatContainerProps {
+  theme?: 'light' | 'dark';
+}
+
+const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
     loading: false,
@@ -108,42 +112,43 @@ const ChatContainer: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-gray-100 p-4 rounded-t-lg shadow">
-        <h2 className="text-xl font-semibold text-gray-800">Nowports Sales Assistant</h2>
-        <p className="text-sm text-gray-600">
+      <div className={`${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'} p-4 rounded-t-lg shadow`}>
+        <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Nowports Sales Assistant</h2>
+        <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
           Ask me about logistics, shipping routes, and how Nowports can help your business
         </p>
       </div>
       
       <div 
         ref={chatContainerRef}
-        className="flex-1 p-4 overflow-y-auto bg-white"
+        className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
       >
         {chatState.messages.map((message) => (
-          <ChatBubble key={message.id} message={message} />
+          <ChatBubble key={message.id} message={message} theme={theme} />
         ))}
         
         {chatState.loading && (
-          <div className="flex items-center text-gray-500 ml-2 mt-2">
+          <div className={`flex items-center ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'} ml-2 mt-2`}>
             <div className="loading-dots flex space-x-1">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+              <div className={`w-2 h-2 ${theme === 'dark' ? 'bg-gray-300' : 'bg-gray-400'} rounded-full animate-bounce delay-75`}></div>
+              <div className={`w-2 h-2 ${theme === 'dark' ? 'bg-gray-300' : 'bg-gray-400'} rounded-full animate-bounce delay-100`}></div>
+              <div className={`w-2 h-2 ${theme === 'dark' ? 'bg-gray-300' : 'bg-gray-400'} rounded-full animate-bounce delay-150`}></div>
             </div>
           </div>
         )}
 
         {chatState.error && (
-          <div className="text-red-500 text-sm my-2 p-2 bg-red-50 rounded">
+          <div className={`text-red-500 text-sm my-2 p-2 ${theme === 'dark' ? 'bg-red-900/30' : 'bg-red-50'} rounded`}>
             {chatState.error}
           </div>
         )}
       </div>
       
-      <div className="p-4 border-t">
+      <div className={`p-4 ${theme === 'dark' ? 'border-t border-gray-700' : 'border-t'}`}>
         <ChatInput 
           onSendMessage={handleSendMessage} 
           disabled={chatState.loading} 
+          theme={theme}
         />
       </div>
     </div>
