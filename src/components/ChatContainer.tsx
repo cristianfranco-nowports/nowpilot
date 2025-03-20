@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'next-i18next';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import QuickReplies from './QuickReplies';
@@ -71,9 +72,10 @@ const SAMPLE_DOCUMENTS: { [key: string]: DocumentAttachment } = {
 };
 
 const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
+  const { t } = useTranslation('common');
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
-    loading: false,
+    isLoading: false,
     error: null,
     sessionId: null,
   });
@@ -94,26 +96,28 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
 
   // Add a welcome message when the component mounts
   useEffect(() => {
+    initializeChat();
+  }, []);
+
+  // Initialize chat with welcome message
+  const initializeChat = () => {
     const welcomeMessage: ChatMessage = {
-      id: 'welcome-msg',
-      content: 'Hello! I\'m the Nowports sales assistant. How can I help you with your logistics needs today?',
+      id: uuidv4(),
+      content: t('intro') + '\n\n' + t('help') + '\n• ' + t('routeInfo') + '\n• ' + t('quotes') + '\n• ' + t('tracking') + '\n• ' + t('documents') + '\n• ' + t('experts') + '\n\n' + t('howCanIHelp'),
       role: 'assistant',
-      timestamp: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      quickReplies: [
+        { label: 'Rutas China-Latinoamérica', value: 'Necesito información sobre rutas entre China y Latinoamérica', icon: '🚢' },
+        { label: 'Cotización transporte', value: 'Quiero solicitar una cotización para transporte internacional', icon: '💰' },
+        { label: 'Requisitos documentales', value: 'Cuáles son los requisitos documentales para importar', icon: '📄' },
+      ]
     };
     
-    setChatState((prev) => ({
-      ...prev,
+    setChatState((prevState) => ({
+      ...prevState,
       messages: [welcomeMessage],
     }));
-
-    // Set initial quick reply options
-    setQuickReplyOptions([
-      { label: 'Cotizar envío', value: 'Quiero cotizar un envío', icon: '📦' },
-      { label: 'Consultar envío', value: 'Quiero consultar el estado de un envío', icon: '🔍' },
-      { label: 'Operaciones', value: 'Necesito ayuda con operaciones', icon: '🛠️' },
-      { label: 'Rutas disponibles', value: 'Qué rutas tienen disponibles', icon: '🗺️' },
-    ]);
-  }, []);
+  };
 
   // Manejar la progresión del formulario de cotización
   const handleQuoteFormProgress = (userInput: string) => {
@@ -521,7 +525,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
     setChatState((prev) => ({
       ...prev,
       messages: [...prev.messages, userMessage],
-      loading: true,
+      isLoading: true,
       error: null,
     }));
 
@@ -601,7 +605,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
       setChatState((prev) => ({
         ...prev,
         messages: [...prev.messages, assistantMessage],
-        loading: false,
+        isLoading: false,
         sessionId: data.sessionId,
       }));
 
@@ -612,7 +616,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
       console.error('Error sending message:', error);
       setChatState((prev) => ({
         ...prev,
-        loading: false,
+        isLoading: false,
         error: 'Failed to get response. Please try again. Error: ' + (error instanceof Error ? error.message : String(error)),
       }));
     }
@@ -644,7 +648,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
     setChatState((prev) => ({
       ...prev,
       messages: [...prev.messages, userMessage],
-      loading: true,
+      isLoading: true,
       error: null,
     }));
 
@@ -702,7 +706,7 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
       setChatState((prev) => ({
         ...prev,
         messages: [...prev.messages, assistantMessage],
-        loading: false,
+        isLoading: false,
       }));
 
       // Generar opciones de respuesta rápida
@@ -784,7 +788,7 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
           <ChatBubble key={message.id} message={message} theme={theme} />
         ))}
         
-        {quickReplyOptions.length > 0 && !chatState.loading && (
+        {quickReplyOptions.length > 0 && !chatState.isLoading && (
           <QuickReplies 
             options={quickReplyOptions} 
             onSelect={handleQuickReplySelect} 
@@ -792,7 +796,7 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
           />
         )}
         
-        {chatState.loading && (
+        {chatState.isLoading && (
           <div className={`flex items-center ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'} ml-2 mt-2`}>
             <div className="loading-dots flex space-x-1">
               <div className={`w-2 h-2 ${theme === 'dark' ? 'bg-gray-300' : 'bg-gray-400'} rounded-full animate-bounce delay-75`}></div>
@@ -813,7 +817,7 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
         <ChatInput 
           onSendMessage={handleSendMessage} 
           onSendDocument={handleSendDocument}
-          disabled={chatState.loading} 
+          disabled={chatState.isLoading} 
           theme={theme}
         />
       </div>

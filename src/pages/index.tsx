@@ -2,6 +2,10 @@ import Head from 'next/head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'next-i18next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetStaticProps } from 'next';
+import LanguageSelector from '../components/LanguageSelector';
 
 // Import components
 const ChatContainer = dynamic(() => import('../components/ChatContainer'), { ssr: false });
@@ -9,6 +13,7 @@ const ChatContainer = dynamic(() => import('../components/ChatContainer'), { ssr
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { t } = useTranslation('common');
 
   // Ensure component only renders client-side to avoid hydration issues
   useEffect(() => {
@@ -37,8 +42,8 @@ export default function Home() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
       <Head>
-        <title>Nowports - Asistente de Ventas</title>
-        <meta name="description" content="Chat con el asistente de ventas de Nowports para obtener información sobre logística y envíos internacionales" />
+        <title>Nowports - {t('welcome')}</title>
+        <meta name="description" content={t('intro')} />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -47,13 +52,14 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">Nowports Assistant</h1>
-              <p className="text-blue-100 mt-1">Su asistente de logística internacional</p>
+              <p className="text-blue-100 mt-1">{t('intro').split(',')[0]}</p>
             </div>
             <nav className="flex items-center space-x-4">
+              <LanguageSelector />
               <button 
                 onClick={toggleTheme}
                 className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-colors"
-                aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                aria-label={theme === 'dark' ? t('toggleLight') : t('toggleDark')}
               >
                 {theme === 'dark' ? (
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -67,7 +73,7 @@ export default function Home() {
               </button>
               <Link href="/widget">
                 <a className="bg-white text-blue-700 hover:bg-blue-50 transition py-2 px-4 rounded-lg shadow font-medium">
-                  Ver Widget
+                  {t('viewWidget')}
                 </a>
               </Link>
             </nav>
@@ -85,28 +91,28 @@ export default function Home() {
           
           <div className="md:col-span-1">
             <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6`}>
-              <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-800'} mb-4`}>Acerca de Nowports</h2>
+              <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-800'} mb-4`}>{t('aboutNowports')}</h2>
               <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
-                Nowports es una plataforma logística para comercio internacional que ofrece servicios de transporte marítimo, aéreo y terrestre.
+                {t('aboutDescription')}
               </p>
               
-              <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-800'} mb-2`}>Nuestros servicios incluyen:</h3>
+              <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-800'} mb-2`}>{t('ourServices')}</h3>
               <ul className={`list-disc pl-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} mb-4 space-y-1`}>
-                <li>Transporte internacional (marítimo, aéreo, terrestre)</li>
-                <li>Agenciamiento aduanal y gestión de documentos</li>
-                <li>Seguro de carga internacional</li>
-                <li>Financiamiento para importadores</li>
-                <li>Tracking en tiempo real</li>
-                <li>Almacenaje y distribución local</li>
+                <li>{t('serviceTransport')}</li>
+                <li>{t('serviceCustoms')}</li>
+                <li>{t('serviceInsurance')}</li>
+                <li>{t('serviceFinancing')}</li>
+                <li>{t('serviceTracking')}</li>
+                <li>{t('serviceStorage')}</li>
               </ul>
               
-              <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-800'} mb-2`}>¿Cómo puedo ayudarte?</h3>
+              <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-800'} mb-2`}>{t('help')}</h3>
               <ul className={`list-disc pl-5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} space-y-1`}>
-                <li>Información sobre rutas y tiempos de tránsito</li>
-                <li>Solicitar cotizaciones de envíos</li>
-                <li>Conocer los documentos necesarios para importar/exportar</li>
-                <li>Resolver dudas sobre Incoterms y trámites aduaneros</li>
-                <li>Conectar con un ejecutivo de ventas</li>
+                <li>{t('routeInfo')}</li>
+                <li>{t('quotes')}</li>
+                <li>{t('documents')}</li>
+                <li>{t('incotermsHelp')}</li>
+                <li>{t('experts')}</li>
               </ul>
             </div>
           </div>
@@ -118,15 +124,23 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-300">
-                © {new Date().getFullYear()} Nowports. Todos los derechos reservados.
+                © {new Date().getFullYear()} Nowports. {t('allRightsReserved')}
               </p>
             </div>
             <div className="text-sm text-gray-300 md:text-right">
-              <p>Powered by Next.js and Tailwind CSS</p>
+              <p>{t('poweredBy')}</p>
             </div>
           </div>
         </div>
       </footer>
     </div>
   );
-} 
+}
+
+export const getStaticProps: GetStaticProps = async ({ locale }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale || 'es', ['common'])),
+    },
+  };
+}; 

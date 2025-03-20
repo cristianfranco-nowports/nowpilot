@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { DocumentAttachment } from '../types/chat';
+import { useTranslation } from 'next-i18next';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -16,6 +17,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   disabled = false,
   theme = 'light'
 }) => {
+  const { t } = useTranslation('common');
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -39,43 +41,57 @@ const ChatInput: React.FC<ChatInputProps> = ({
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !isLoading && !disabled) {
-      onSendMessage(message);
+    
+    // Trim message to remove trailing whitespace
+    const trimmedMessage = message.trim();
+    
+    if (trimmedMessage) {
+      onSendMessage(trimmedMessage);
       setMessage('');
-      
-      // Reset height after sending
-      if (inputRef.current) {
-        inputRef.current.style.height = 'auto';
-      }
     } else if (selectedFile && onSendDocument) {
       onSendDocument(selectedFile);
       setSelectedFile(null);
     }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+    
+    // Reset input height
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
     }
   };
-
+  
+  const handleFileClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
     }
   };
-
-  const handleAttachClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const clearSelectedFile = () => {
+  
+  const handleRemoveFile = () => {
     setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+  
+  // Format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' bytes';
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    else return (bytes / 1048576).toFixed(1) + ' MB';
+  };
+  
+  // Handle Enter key to submit, Shift+Enter for new line
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (!isLoading && !disabled && (message.trim() || selectedFile)) {
+        handleSubmit(e);
+      }
     }
   };
   
@@ -103,19 +119,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <div className={`${themeStyles.container[theme]}`}>
       {selectedFile && (
-        <div className={`flex items-center justify-between p-2 mb-2 rounded-lg ${themeStyles.filePreview[theme]} border`}>
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-            </svg>
-            <span className="text-sm truncate max-w-xs">{selectedFile.name}</span>
-            <span className="text-xs ml-2">{(selectedFile.size / 1024).toFixed(1)} KB</span>
+        <div className={`${themeStyles.filePreview[theme]} rounded-lg p-2 mb-2 flex items-center border`}>
+          <div className="flex-1 min-w-0">
+            <p className={`font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-blue-600'}`}>
+              {selectedFile.name}
+            </p>
+            <p className={`text-xs ${theme === 'dark' ? 'text-gray-300' : 'text-blue-500'}`}>
+              {formatFileSize(selectedFile.size)}
+            </p>
           </div>
           <button 
             type="button" 
-            onClick={clearSelectedFile}
-            className="text-sm ml-2 hover:text-red-500"
-            aria-label="Eliminar archivo"
+            onClick={handleRemoveFile}
+            className={`ml-2 p-1 rounded-full ${theme === 'dark' ? 'bg-gray-500 text-gray-200 hover:bg-gray-400' : 'bg-blue-100 text-blue-500 hover:bg-blue-200'}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -125,53 +141,45 @@ const ChatInput: React.FC<ChatInputProps> = ({
       )}
       
       <form onSubmit={handleSubmit} className={`flex items-end space-x-2`}>
-        {/* Oculto input de archivo */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-        />
-        
         <button
           type="button"
-          onClick={handleAttachClick}
-          className={`p-2 rounded-lg ${theme === 'light' ? 'text-gray-500 hover:text-blue-600 hover:bg-gray-100' : 'text-gray-400 hover:text-blue-400 hover:bg-gray-800'}`}
-          aria-label="Adjuntar archivo"
+          onClick={handleFileClick}
+          className={`${isLoading || disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600'} p-2 rounded-full mr-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}
           disabled={isLoading || disabled}
+          title={t('uploadDoc')}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
           </svg>
+          <input 
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.txt"
+          />
         </button>
         
-        <div className={`relative flex-1 ${isFocused ? 'z-10' : ''}`}>
+        <div className={`flex-1 relative ${isFocused ? (theme === 'dark' ? 'ring-2 ring-blue-500' : 'ring-2 ring-blue-400') : ''}`}>
           <textarea
             ref={inputRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
+            placeholder={t('type')}
+            rows={1}
+            className={`block w-full py-2 px-3 pr-16 resize-none ${theme === 'dark' ? 'bg-gray-600 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-100 text-gray-900 placeholder-gray-500 border-gray-200'} rounded-lg border focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
+            disabled={isLoading || disabled}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            className={`w-full resize-none py-2 px-3 rounded-lg border ${themeStyles.input[theme]} transition-colors duration-200 outline-none overflow-auto`}
-            placeholder="Escribe tu mensaje..."
-            rows={1}
-            disabled={isLoading || disabled}
-            style={{ maxHeight: '120px' }}
           />
-          {message.length > 0 && (
-            <div className={`absolute right-2 bottom-2 text-xs ${theme === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>
-              {message.length} / 1000
-            </div>
-          )}
         </div>
         
         <button
           type="submit"
-          disabled={(!message.trim() && !selectedFile) || isDisabled}
-          className={`${themeStyles.button[theme]} px-3 py-2 rounded-lg flex-shrink-0 transition-colors duration-200 disabled:cursor-not-allowed`}
-          aria-label="Enviar mensaje"
+          className={`ml-2 p-2 rounded-full ${message.trim() || selectedFile ? (theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700') : (theme === 'dark' ? 'bg-gray-600 text-gray-400' : 'bg-gray-200 text-gray-500')} ${isLoading || disabled ? 'opacity-50 cursor-not-allowed' : ''} focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-white`}
+          disabled={((!message.trim() && !selectedFile) || isLoading || disabled)}
+          title={t('send')}
         >
           {isLoading ? (
             <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -179,8 +187,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           )}
         </button>

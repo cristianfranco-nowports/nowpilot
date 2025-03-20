@@ -45,4 +45,21 @@ body {
   50% {
     transform: translateY(-5px);
   }
+}
+
+/* Animation for dropdown menu */
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+  transform-origin: top right;
+}
+
+@keyframes scaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 } 

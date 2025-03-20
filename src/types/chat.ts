@@ -2,6 +2,12 @@
 
 export type MessageRole = 'user' | 'assistant' | 'system';
 
+export interface QuickReply {
+  label: string;
+  value: string;
+  icon?: string;
+}
+
 export interface DocumentAttachment {
   id: string;
   name: string;
@@ -17,11 +23,12 @@ export interface ChatMessage {
   content: string;
   timestamp: string;
   attachments?: DocumentAttachment[];
+  quickReplies?: QuickReply[];
 }
 
 export interface ChatState {
   messages: ChatMessage[];
-  loading: boolean;
+  isLoading: boolean;
   error: string | null;
   sessionId: string | null;
 }
