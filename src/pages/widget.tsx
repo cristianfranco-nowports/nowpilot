@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import ChatWidget from '../components/ChatWidget';
+import LanguageSelector from '../components/LanguageSelector';
 
 const WidgetDemo: React.FC = () => {
   // Widget configuration state
@@ -41,7 +42,7 @@ const WidgetDemo: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${siteTheme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`min-h-screen flex flex-col transition-colors duration-500 ${siteTheme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <Head>
         <title>Widget Studio - Nowports</title>
         <meta name="description" content="Personaliza y configura tu widget de chat para Nowports" />
@@ -56,22 +57,25 @@ const WidgetDemo: React.FC = () => {
       </div>
 
       {/* Header */}
-      <header className={`transition-colors duration-300 ${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-sm sticky top-0 z-30`}>
+      <header className={`transition-colors duration-300 ${siteTheme === 'dark' ? 'bg-gradient-to-r from-blue-800 to-blue-900' : 'bg-gradient-to-r from-blue-600 to-blue-800'} text-white shadow-sm sticky top-0 z-30`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <div className="flex items-center mb-4 sm:mb-0">
               <div className="mr-4">
-                <div className="h-10 w-10 bg-blue-600 text-white rounded-lg flex items-center justify-center text-xl font-bold">N</div>
+                <div className="h-10 w-10 bg-white text-blue-600 rounded-lg flex items-center justify-center text-xl font-bold">N</div>
               </div>
               <div>
-                <h1 className={`text-2xl font-bold ${siteTheme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>Widget Studio</h1>
-                <p className={`text-sm ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Personaliza tu asistente virtual</p>
+                <h1 className="text-2xl font-bold text-white">Widget Studio</h1>
+                <p className="text-sm text-blue-100">Personaliza tu asistente virtual</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <div className="mr-2">
+                <LanguageSelector />
+              </div>
               <button 
                 onClick={() => setSiteTheme(theme => theme === 'light' ? 'dark' : 'light')}
-                className={`p-2 rounded-full ${siteTheme === 'dark' ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} transition-colors`}
+                className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-colors"
                 aria-label="Toggle site theme"
               >
                 {siteTheme === 'dark' ? (
@@ -85,7 +89,7 @@ const WidgetDemo: React.FC = () => {
                 )}
               </button>
               <Link href="/">
-                <a className={`py-2 px-4 rounded-lg ${siteTheme === 'dark' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-600 text-white hover:bg-blue-700'} transition-colors`}>
+                <a className="bg-white text-blue-700 hover:bg-blue-50 transition py-2 px-4 rounded-lg shadow font-medium">
                   Volver al chat principal
                 </a>
               </Link>
@@ -94,7 +98,7 @@ const WidgetDemo: React.FC = () => {
         </div>
       </header>
 
-      <main className={`container mx-auto px-4 py-8 ${loaded ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-4'} transition-all duration-500`}>
+      <main className={`container mx-auto px-4 py-8 flex-grow ${loaded ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-4'} transition-all duration-500`}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Configuration panel */}
           <div className="lg:col-span-7 order-2 lg:order-1">
@@ -341,66 +345,98 @@ const WidgetDemo: React.FC = () => {
             </div>
           </div>
           
-          {/* Preview panel */}
-          <div className="lg:col-span-5 order-1 lg:order-2">
-            <div className={`sticky top-28 rounded-xl shadow-lg overflow-hidden p-6 transition-colors duration-300 ${siteTheme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white'}`}>
-              <h2 className={`text-xl font-semibold mb-4 ${siteTheme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Vista Previa</h2>
-              
-              <div className="flex justify-center mb-6">
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${siteTheme === 'dark' ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-blue-800'}`}>
+          {/* Widget preview */}
+          <div className="lg:col-span-5 order-1 lg:order-2 mb-8 lg:mb-0">
+            <div className={`${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6 h-[32rem] md:sticky md:top-20 overflow-hidden transition-colors duration-300 border ${siteTheme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+              <div className="flex flex-col h-full">
+                <h3 className="text-lg font-semibold mb-2">Vista Previa</h3>
+                <div className="inline-flex items-center px-3 py-1 mb-3 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                   <svg className="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
                     <circle cx="4" cy="4" r="3" />
                   </svg>
                   Viendo en tiempo real
-                </span>
-              </div>
-              
-              <div className={`aspect-video rounded-lg relative overflow-hidden border ${siteTheme === 'dark' ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-gray-50'}`}>
-                {/* Browser mockup */}
-                <div className={`h-8 ${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'} flex items-center px-3 space-x-2`}>
-                  <div className="flex space-x-1.5">
-                    <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                    <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                </div>
+                <div className="w-full flex-1 relative bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                  {/* Barra de navegador simulada */}
+                  <div className="h-8 bg-gray-200 dark:bg-gray-800 flex items-center px-3 space-x-2">
+                    <div className="flex space-x-1.5">
+                      <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                      <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                      <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <div className="flex-1 h-5 rounded-md mx-16 bg-white dark:bg-gray-700"></div>
                   </div>
-                  <div className={`flex-1 h-5 rounded-md mx-16 ${siteTheme === 'dark' ? 'bg-gray-700' : 'bg-white'}`}></div>
+                  
+                  {/* Contenido de la web simulada */}
+                  <div className="relative h-[calc(100%-2rem)]">
+                    {/* Posicionamos el widget según la configuración */}
+                    <div className={`absolute ${widgetPosition === 'bottom-right' ? 'right-3 bottom-3' : 'left-3 bottom-3'}`}>
+                      <div className={`${widgetTheme === 'light' ? 'bg-white text-gray-800 border border-gray-200' : 'bg-gray-800 text-white border border-gray-700'} rounded-lg shadow-xl overflow-hidden`} style={{width: '250px', height: '350px'}}>
+                        {/* Header del widget */}
+                        <div className={`${widgetTheme === 'light' ? 'bg-blue-600' : 'bg-gray-900'} p-3 flex flex-col`}>
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <h4 className="text-white font-bold text-sm">{widgetTitle}</h4>
+                              <p className="text-white/80 text-xs">{widgetSubtitle}</p>
+                            </div>
+                            <div className="flex space-x-1">
+                              <button className="p-1 rounded-full text-white/80 hover:bg-white/10">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {/* Cuerpo del widget (simulado) */}
+                          <div className={`p-2 ${widgetTheme === 'light' ? 'bg-gray-100' : 'bg-gray-800'} h-[270px] overflow-y-auto`}>
+                            <div className={`p-2 rounded-lg mb-2 ${widgetTheme === 'light' ? 'bg-blue-100 text-blue-800' : 'bg-gray-700 text-white'} max-w-[80%] text-sm`}>
+                              {initialMessage}
+                            </div>
+                          </div>
+                          
+                          {/* Input del widget (simulado) */}
+                          <div className={`p-2 border-t ${widgetTheme === 'light' ? 'border-gray-200' : 'border-gray-700'}`}>
+                            <div className={`flex rounded-full p-2 ${widgetTheme === 'light' ? 'bg-gray-100' : 'bg-gray-700'}`}>
+                              <input type="text" readOnly className={`flex-1 text-sm border-none bg-transparent ${widgetTheme === 'light' ? 'text-gray-800' : 'text-white'} focus:ring-0 focus:outline-none`} placeholder="Escribe un mensaje..." />
+                              <button className={`p-1 rounded-full ${widgetTheme === 'light' ? 'bg-blue-600' : 'bg-blue-600'} text-white`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
-                {/* Website content mockup */}
-                <div className="p-4 relative h-full">
-                  <div className={`absolute bottom-3 ${widgetPosition === 'bottom-right' ? 'right-3' : 'left-3'}`}>
-                    <div className={`w-12 h-12 rounded-full ${widgetTheme === 'dark' ? 'bg-blue-600' : 'bg-blue-500'} flex items-center justify-center shadow-lg`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-                      </svg>
-                    </div>
+                {/* Configuración actual */}
+                <div className="mt-4">
+                  <h4 className={`font-medium text-sm mb-2 ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Configuración actual</h4>
+                  <div className={`rounded-lg overflow-hidden border ${siteTheme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <dl className="divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                      <div className={`px-3 py-2 grid grid-cols-3 gap-4 ${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                        <dt className={`font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Posición</dt>
+                        <dd className={`font-medium col-span-2 ${siteTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                          {widgetPosition === 'bottom-right' ? 'Inferior Derecha' : 'Inferior Izquierda'}
+                        </dd>
+                      </div>
+                      <div className={`px-3 py-2 grid grid-cols-3 gap-4`}>
+                        <dt className={`font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Tema</dt>
+                        <dd className={`font-medium col-span-2 ${siteTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                          {widgetTheme === 'light' ? 'Claro' : 'Oscuro'}
+                        </dd>
+                      </div>
+                      <div className={`px-3 py-2 grid grid-cols-3 gap-4 ${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                        <dt className={`font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Título</dt>
+                        <dd className={`font-medium col-span-2 truncate ${siteTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                          {widgetTitle}
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
-                </div>
-              </div>
-              
-              <div className="mt-6">
-                <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Configuración actual</h3>
-                <div className={`rounded-lg overflow-hidden border ${siteTheme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-                  <dl className="divide-y divide-gray-200 dark:divide-gray-700">
-                    <div className={`px-4 py-3 grid grid-cols-3 gap-4 ${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                      <dt className={`text-sm font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Posición</dt>
-                      <dd className={`text-sm font-medium col-span-2 ${siteTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        {widgetPosition === 'bottom-right' ? 'Inferior Derecha' : 'Inferior Izquierda'}
-                      </dd>
-                    </div>
-                    <div className={`px-4 py-3 grid grid-cols-3 gap-4`}>
-                      <dt className={`text-sm font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Tema</dt>
-                      <dd className={`text-sm font-medium col-span-2 ${siteTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        {widgetTheme === 'light' ? 'Claro' : 'Oscuro'}
-                      </dd>
-                    </div>
-                    <div className={`px-4 py-3 grid grid-cols-3 gap-4 ${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                      <dt className={`text-sm font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Título</dt>
-                      <dd className={`text-sm font-medium col-span-2 truncate ${siteTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        {widgetTitle}
-                      </dd>
-                    </div>
-                  </dl>
                 </div>
               </div>
             </div>
@@ -408,7 +444,7 @@ const WidgetDemo: React.FC = () => {
         </div>
       </main>
       
-      <footer className={`py-6 mt-12 transition-colors duration-300 ${siteTheme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-gray-800 text-gray-300'}`}>
+      <footer className={`py-6 transition-colors duration-300 ${siteTheme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-gray-800 text-gray-300'}`}>
         <div className="container mx-auto px-4 text-center">
           <p>© 2025 Nowports. Todos los derechos reservados.</p>
         </div>
