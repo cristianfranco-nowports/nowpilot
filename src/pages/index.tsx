@@ -1,202 +1,97 @@
-import { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import styles from '../styles/Home.module.css';
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 
-// Define interface for chat messages
-interface ChatMessage {
-  text: string;
-  isUser: boolean;
-  timestamp: Date;
-}
+// Import components
+const ChatContainer = dynamic(() => import('../components/ChatContainer'), { ssr: false });
 
 export default function Home() {
-  const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // Initial greeting when component mounts
+  // Ensure component only renders client-side to avoid hydration issues
   useEffect(() => {
-    setMessages([
-      { 
-        text: '¡Hola! Soy el asistente de ventas de Nowports. ¿Cómo puedo ayudarle con sus necesidades logísticas hoy?', 
-        isUser: false, 
-        timestamp: new Date() 
-      }
-    ]);
+    setMounted(true);
   }, []);
 
-  // Scroll to bottom of chat whenever messages update
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!input.trim()) return;
-    
-    // Add user message to chat
-    const userMessage: ChatMessage = {
-      text: input,
-      isUser: true,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    setLoading(true);
-    setInput('');
-    
-    try {
-      console.log('Sending request to API with message:', input);
-      
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: input,
-          sessionId,
-        }),
-      });
-      
-      console.log('Response status:', response.status);
-      
-      // Intenta obtener el texto de la respuesta primero para depuración
-      const responseText = await response.text();
-      console.log('Response text:', responseText);
-      
-      // Convierte el texto a JSON
-      let data;
-      try {
-        data = JSON.parse(responseText);
-        console.log('Parsed data:', data);
-      } catch (parseError) {
-        console.error('Error parsing JSON:', parseError);
-        throw new Error(`Failed to parse JSON: ${responseText}`);
-      }
-      
-      if (response.ok) {
-        // Save session ID if we got one
-        if (data.sessionId) {
-          setSessionId(data.sessionId);
-        }
-        
-        // Add assistant message to chat
-        const assistantMessage: ChatMessage = {
-          text: data.response,
-          isUser: false,
-          timestamp: new Date()
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-      } else {
-        console.error('API returned error:', data);
-        // Handle error with more details
-        setMessages(prev => [...prev, {
-          text: `Error del servidor: ${data.error || 'Desconocido'}. Por favor, inténtelo de nuevo.`,
-          isUser: false,
-          timestamp: new Date()
-        }]);
-      }
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      setMessages(prev => [...prev, {
-        text: `Error de conexión: ${error.message}. Por favor, compruebe su conexión e inténtelo de nuevo.`,
-        isUser: false,
-        timestamp: new Date()
-      }]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  function formatTimestamp(date: Date) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-
   return (
-    <div className={styles.container}>
+    <div className="min-h-screen bg-gray-50">
       <Head>
-        <title>Nowports Sales Assistant</title>
-        <meta name="description" content="Powered by AI to help with your logistics needs" />
+        <title>Nowports - Asistente de Ventas</title>
+        <meta name="description" content="Chat con el asistente de ventas de Nowports para obtener información sobre logística y envíos internacionales" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Nowports Sales Assistant
-          <Link href="/widget">
-            <a className="ml-4 text-sm text-blue-500 hover:text-blue-700">Ver widget</a>
-          </Link>
-        </h1>
-        <p className={styles.description}>
-          Powered by AI to help with your logistics needs
-        </p>
-
-        <div className={styles.chatContainer}>
-          <div className={styles.chatHeader}>
-            <h2>Nowports Sales Assistant</h2>
-            <p>Ask me about logistics, shipping routes, and how Nowports can help your business</p>
+      <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-6 shadow-md">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">Nowports Assistant</h1>
+              <p className="text-blue-100 mt-1">Su asistente de logística internacional</p>
+            </div>
+            <nav>
+              <Link href="/widget">
+                <a className="bg-white text-blue-700 hover:bg-blue-50 transition py-2 px-4 rounded-lg shadow font-medium">
+                  Ver Widget
+                </a>
+              </Link>
+            </nav>
           </div>
+        </div>
+      </header>
 
-          <div className={styles.messagesContainer}>
-            {messages.map((message, index) => (
-              <div 
-                key={index} 
-                className={`${styles.messageWrapper} ${message.isUser ? styles.userMessageWrapper : styles.assistantMessageWrapper}`}
-              >
-                <div 
-                  className={`${styles.message} ${message.isUser ? styles.userMessage : styles.assistantMessage}`}
-                >
-                  {message.text?.split('\n').map((text, i) => (
-                    <p key={i}>{text}</p>
-                  ))}
-                  <span className={styles.timestamp}>{formatTimestamp(message.timestamp)}</span>
-                </div>
-              </div>
-            ))}
-            {loading && (
-              <div className={`${styles.messageWrapper} ${styles.assistantMessageWrapper}`}>
-                <div className={`${styles.message} ${styles.assistantMessage}`}>
-                  <div className={styles.typingIndicator}>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
+      <main className="container mx-auto px-4 md:px-6 py-8">
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden h-[calc(100vh-12rem)] flex flex-col">
+              {mounted && <ChatContainer />}
+            </div>
           </div>
-
-          <form onSubmit={handleSubmit} className={styles.inputContainer}>
-            <textarea
-              className={styles.chatInput}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Escriba su mensaje aquí..."
-              rows={1}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                }
-              }}
-            />
-            <button 
-              type="submit" 
-              className={styles.sendButton}
-              disabled={loading || !input.trim()}
-            >
-              Enviar
-            </button>
-          </form>
+          
+          <div className="md:col-span-1">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Acerca de Nowports</h2>
+              <p className="text-gray-600 mb-4">
+                Nowports es una plataforma logística para comercio internacional que ofrece servicios de transporte marítimo, aéreo y terrestre.
+              </p>
+              
+              <h3 className="text-lg font-medium text-gray-800 mb-2">Nuestros servicios incluyen:</h3>
+              <ul className="list-disc pl-5 text-gray-600 mb-4 space-y-1">
+                <li>Transporte internacional (marítimo, aéreo, terrestre)</li>
+                <li>Agenciamiento aduanal y gestión de documentos</li>
+                <li>Seguro de carga internacional</li>
+                <li>Financiamiento para importadores</li>
+                <li>Tracking en tiempo real</li>
+                <li>Almacenaje y distribución local</li>
+              </ul>
+              
+              <h3 className="text-lg font-medium text-gray-800 mb-2">¿Cómo puedo ayudarte?</h3>
+              <ul className="list-disc pl-5 text-gray-600 space-y-1">
+                <li>Información sobre rutas y tiempos de tránsito</li>
+                <li>Solicitar cotizaciones de envíos</li>
+                <li>Conocer los documentos necesarios para importar/exportar</li>
+                <li>Resolver dudas sobre Incoterms y trámites aduaneros</li>
+                <li>Conectar con un ejecutivo de ventas</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </main>
+
+      <footer className="bg-gray-800 text-white py-6 mt-8">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-300">
+                © {new Date().getFullYear()} Nowports. Todos los derechos reservados.
+              </p>
+            </div>
+            <div className="text-sm text-gray-300 md:text-right">
+              <p>Powered by Next.js and Tailwind CSS</p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 
