@@ -21,7 +21,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
-    loading: false,
+    isLoading: false,
     error: null,
     sessionId: Math.random().toString(36).substring(2, 15)
   });
@@ -99,7 +99,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     setChatState(prev => ({
       ...prev,
       messages: [...prev.messages, userMessage],
-      loading: true
+      isLoading: true
     }));
     
     try {
@@ -130,13 +130,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       setChatState(prev => ({
         ...prev,
         messages: [...prev.messages, assistantMessage],
-        loading: false
+        isLoading: false
       }));
       
     } catch (error) {
       setChatState(prev => ({
         ...prev,
-        loading: false,
+        isLoading: false,
         error: 'Error al enviar el mensaje. Por favor, inténtalo de nuevo.'
       }));
     }
@@ -271,7 +271,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             ))}
             
             {/* Loading indicator */}
-            {chatState.loading && (
+            {chatState.isLoading && (
               <div className="flex space-x-2 p-3 max-w-[80%] rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse">
                 <div className="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-600 animate-bounce"></div>
                 <div className="w-3 h-3 rounded-full bg-gray-400 dark:bg-gray-600 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -293,7 +293,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           <div className="p-3 border-t border-gray-200 dark:border-gray-700">
             <ChatInput 
               onSendMessage={handleSendMessage} 
-              isLoading={chatState.loading}
+              isLoading={chatState.isLoading}
               theme={theme}
             />
           </div>
