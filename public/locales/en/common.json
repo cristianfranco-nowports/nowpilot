@@ -1,6 +1,6 @@
 {
   "welcome": "Welcome to Nowports Virtual Assistant!",
-  "intro": "I am Nowports' virtual assistant, specialized in international logistics solutions.",
+  "intro": "I am Nowports' virtual assistant.",
   "help": "I can help you with:",
   "routeInfo": "Information on routes and services",
   "routeInfoDesc": "Transit times, departures and available ports",
