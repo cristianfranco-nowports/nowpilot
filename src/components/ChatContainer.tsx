@@ -1176,26 +1176,9 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
         setTimeout(() => {
           const assistantMessage: ChatMessage = {
             id: uuidv4(),
-            content: `Para el envío ${shipmentId || 'actual'}, tu agente asignado es **${agentName}**. ¿Cómo prefieres contactarlo?`,
+            content: `Para el envío ${shipmentId || 'actual'}, tu agente asignado es **${agentName}**. Puedes contactar a tu ejecutivo directamente desde la tarjeta de contacto que aparece arriba.`,
             role: 'assistant',
             timestamp: Date.now().toString(),
-            quickReplies: [
-              { 
-                label: '📱 WhatsApp', 
-                value: `Enviar WhatsApp a ${agentName}`,
-                icon: '📱'
-              },
-              { 
-                label: '📞 Llamada', 
-                value: `Llamar a ${agentName}`,
-                icon: '📞'
-              },
-              { 
-                label: '✉️ Email', 
-                value: `Enviar correo a ${agentName}`,
-                icon: '✉️'
-              }
-            ],
             customerAgentData: {
               name: agentName,
               position: 'Ejecutivo de Cuenta',

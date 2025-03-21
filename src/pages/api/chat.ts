@@ -281,12 +281,6 @@ Ofrecemos soluciones multimodales que combinan:
 3. ✈️ **Transporte aéreo** - Para envíos urgentes o de alto valor
 4. 🚂 **Transporte ferroviario** - Para rutas específicas con alta eficiencia
 
-Cada solución incluye:
-- Tarifas competitivas según el volumen y tipo de mercancía
-- Opciones de Incoterms adaptadas a sus necesidades (EXW, FOB, CIF, etc.)
-- Seguimiento en tiempo real de su carga
-- Gestión aduanal y trámites documentales
-
 ¿Podría indicarme el origen y destino específicos de su carga para ofrecerle opciones más detalladas?`;
     }
   }
