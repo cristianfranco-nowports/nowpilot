@@ -486,6 +486,40 @@ Con esta información, te proporcionaré una cotización personalizada y te expl
   const extractQuickReplyOptions = (content: string): QuickReplyOption[] => {
     const options: QuickReplyOption[] = [];
     
+    // Extraer opciones de quickReplies si están en el formato [quickReplies: opción1, opción2, ...]
+    const quickRepliesRegex = /\[quickReplies:\s*(.*?)\]/i;
+    const quickRepliesMatch = content.match(quickRepliesRegex);
+    
+    if (quickRepliesMatch && quickRepliesMatch[1]) {
+      // Eliminar el formato [quickReplies: ...] del contenido visible
+      const cleanedContent = content.replace(quickRepliesRegex, '').trim();
+      
+      // Actualizar el contenido del mensaje sin el formato quickReplies
+      if (chatState.messages.length > 0) {
+        const lastMessage = chatState.messages[chatState.messages.length - 1];
+        if (lastMessage.role === 'assistant') {
+          setChatState(prev => ({
+            ...prev,
+            messages: prev.messages.map(msg => 
+              msg.id === lastMessage.id ? { ...msg, content: cleanedContent } : msg
+            )
+          }));
+        }
+      }
+      
+      // Extraer las opciones
+      const optionsString = quickRepliesMatch[1];
+      const optionsList = optionsString.split(',').map(opt => opt.trim());
+      
+      // Convertir las opciones al formato QuickReplyOption
+      return optionsList.map(option => ({
+        label: option,
+        value: option,
+        icon: getIconForOption(option)
+      }));
+    }
+    
+    // Si no hay formato explícito de quickReplies, aplicar el método anterior de detección
     // Detectar si es una respuesta a una consulta de envío específico (código de tracking)
     const trackingCodeRegex = /\b([A-Z]{3}\d{7})\b/;
     const hasTrackingCode = content.match(trackingCodeRegex);
@@ -517,80 +551,63 @@ Con esta información, te proporcionaré una cotización personalizada y te expl
       options.push({ label: 'Actualizar estado', value: `Actualizar estado del envío ${hasTrackingCode[1]}`, icon: '🔄' });
     }
 
-    // Buscar listas de opciones para servicios generales
-    const transportRegex = /(?:transporte|transportes)(?:\s\w+)?:\s*¿([^?]+)\?/i;
-    const tarifasRegex = /(?:tarifa|tarifas)(?:\s\w+)?:\s*¿([^?]+)\?/i;
-    const rutasRegex = /(?:ruta|rutas)(?:\s\w+)?:\s*¿([^?]+)\?/i;
-    const financiamientoRegex = /(?:financiamiento)(?:\s\w+)?:\s*¿([^?]+)\?/i;
+    // Resto del código existente para extraer opciones...
     
-    // Transporte
-    const transportMatch = content.match(transportRegex);
-    if (transportMatch && transportMatch[1]) {
-      if (transportMatch[1].includes('marítimas') || transportMatch[1].includes('marítimo')) {
-        options.push({ label: 'Marítimo', value: 'Quiero información sobre transporte marítimo', icon: '🚢' });
-      }
-      if (transportMatch[1].includes('aéreas') || transportMatch[1].includes('aéreo')) {
-        options.push({ label: 'Aéreo', value: 'Quiero información sobre transporte aéreo', icon: '✈️' });
-      }
-      if (transportMatch[1].includes('terrestres') || transportMatch[1].includes('terrestre')) {
-        options.push({ label: 'Terrestre', value: 'Quiero información sobre transporte terrestre', icon: '🚚' });
-      }
-    }
-
-    // Tarifas
-    const tarifasMatch = content.match(tarifasRegex);
-    if (tarifasMatch && tarifasMatch[1]) {
-      options.push({ label: 'Ver tarifas', value: 'Quiero conocer las tarifas disponibles', icon: '💰' });
-    }
-
-    // Rutas
-    const rutasMatch = content.match(rutasRegex);
-    if (rutasMatch && rutasMatch[1]) {
-      options.push({ label: 'Ver rutas', value: 'Muéstrame las rutas disponibles', icon: '🗺️' });
-    }
-
-    // Financiamiento
-    const financiamientoMatch = content.match(financiamientoRegex);
-    if (financiamientoMatch && financiamientoMatch[1]) {
-      options.push({ label: 'Financiamiento', value: 'Cuéntame sobre opciones de financiamiento', icon: '💼' });
-    }
-
-    // Detectar opciones de operaciones
-    if (content.toLowerCase().includes('operaciones') || content.toLowerCase().includes('soporte')) {
-      if (options.length === 0) {
-        options.push({ label: 'Soporte general', value: 'Necesito soporte general', icon: '🛠️' });
-        options.push({ label: 'Facturación', value: 'Tengo dudas sobre facturación', icon: '📝' });
-        options.push({ label: 'Documentos', value: 'Necesito ayuda con documentos', icon: '📄' });
-        options.push({ label: 'Liberación', value: 'Consulta sobre liberación', icon: '🔓' });
-        options.push({ label: 'Reservas', value: 'Información sobre reservas', icon: '📅' });
-      }
-    }
-
-    // Detectar importación/exportación
-    if (content.toLowerCase().includes('importación') || content.toLowerCase().includes('importar')) {
-      options.push({ label: 'Importación', value: 'Información sobre importación', icon: '📥' });
-    }
-    if (content.toLowerCase().includes('exportación') || content.toLowerCase().includes('exportar')) {
-      options.push({ label: 'Exportación', value: 'Información sobre exportación', icon: '📤' });
-    }
-
-    // Si no encontramos opciones específicas pero hay menciones generales
-    if (options.length === 0) {
-      if (content.includes('transporte') || content.includes('transportes')) {
-        options.push({ label: 'Transporte', value: 'Quiero información sobre opciones de transporte', icon: '🚢' });
-      }
-      if (content.includes('tarifa') || content.includes('tarifas') || content.includes('costo') || content.includes('costos')) {
-        options.push({ label: 'Tarifas', value: 'Quiero conocer las tarifas', icon: '💰' });
-      }
-      if (content.includes('ruta') || content.includes('rutas')) {
-        options.push({ label: 'Rutas', value: 'Muéstrame las rutas', icon: '🗺️' });
-      }
-      if (content.includes('financiamiento') || content.includes('financiar')) {
-        options.push({ label: 'Financiamiento', value: 'Opciones de financiamiento', icon: '💼' });
-      }
-    }
-
     return options;
+  };
+  
+  // Obtener un ícono para la opción según su contenido
+  const getIconForOption = (option: string): string => {
+    const optionLower = option.toLowerCase();
+    
+    if (optionLower.includes('electrónico')) return '📱';
+    if (optionLower.includes('textil')) return '👕';
+    if (optionLower.includes('maquinaria')) return '⚙️';
+    if (optionLower.includes('automotriz')) return '🚗';
+    if (optionLower.includes('alimento')) return '🍎';
+    if (optionLower.includes('químico')) return '🧪';
+    if (optionLower.includes('plástico')) return '♻️';
+    if (optionLower.includes('mobiliario')) return '🪑';
+    if (optionLower.includes('metal')) return '🔧';
+    
+    if (optionLower.includes('ligera')) return '⚖️';
+    if (optionLower.includes('media')) return '⚖️';
+    if (optionLower.includes('pesada')) return '⚖️';
+    if (optionLower.includes('muy pesada')) return '⚖️';
+    
+    if (optionLower.includes('exw')) return '🏭';
+    if (optionLower.includes('fca')) return '🚚';
+    if (optionLower.includes('fob')) return '🚢';
+    if (optionLower.includes('cif')) return '💼';
+    if (optionLower.includes('dap')) return '📦';
+    if (optionLower.includes('ddp')) return '🏢';
+    
+    if (optionLower.includes('contenedor')) return '📦';
+    if (optionLower.includes('lcl')) return '📦';
+    
+    if (optionLower.includes('shanghai')) return '🇨🇳';
+    if (optionLower.includes('shenzhen')) return '🇨🇳';
+    if (optionLower.includes('hong kong')) return '🇭🇰';
+    if (optionLower.includes('busan')) return '🇰🇷';
+    if (optionLower.includes('rotterdam')) return '🇳🇱';
+    if (optionLower.includes('hamburg')) return '🇩🇪';
+    if (optionLower.includes('new york')) return '🇺🇸';
+    if (optionLower.includes('miami')) return '🇺🇸';
+    if (optionLower.includes('medellín')) return '🇨🇴';
+    if (optionLower.includes('bogotá')) return '🇨🇴';
+    if (optionLower.includes('cartagena')) return '🇨🇴';
+    if (optionLower.includes('méxico')) return '🇲🇽';
+    if (optionLower.includes('buenos aires')) return '🇦🇷';
+    if (optionLower.includes('santiago')) return '🇨🇱';
+    if (optionLower.includes('lima')) return '🇵🇪';
+    if (optionLower.includes('são paulo')) return '🇧🇷';
+    
+    if (optionLower.includes('sí') || optionLower.includes('si')) return '✅';
+    if (optionLower.includes('no')) return '❌';
+    if (optionLower.includes('más información')) return 'ℹ️';
+    if (optionLower.includes('contactar')) return '👨‍💼';
+    
+    return '';
   };
 
   const handleSendMessage = async (content: string) => {
@@ -846,6 +863,26 @@ Con esta información, te proporcionaré una cotización personalizada y te expl
       // Extraer y configurar opciones de respuesta rápida
       const options = extractQuickReplyOptions(responseContent);
       setQuickReplyOptions(options);
+      
+      // Si se detectaron opciones en el formato [quickReplies: ...], actualizar el mensaje
+      if (options.length > 0) {
+        setChatState((prev) => {
+          const updatedMessages = [...prev.messages];
+          // Obtener el último mensaje (que es el que acabamos de añadir)
+          const lastMessage = updatedMessages[updatedMessages.length - 1];
+          
+          // Actualizar el mensaje con las opciones detectadas
+          updatedMessages[updatedMessages.length - 1] = {
+            ...lastMessage,
+            quickReplies: options
+          };
+          
+          return {
+            ...prev,
+            messages: updatedMessages
+          };
+        });
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       setChatState((prev) => ({

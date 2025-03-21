@@ -76,6 +76,78 @@ const specialRoutes: Record<string, SpecialRoute> = {
 };
 
 /**
+ * Helper function to format quickReplies in a consistent way for UI display
+ */
+function formatQuickReplies(options: string[]): string {
+  if (!options || options.length === 0) return "";
+  return `\n\n[quickReplies: ${options.join(', ')}]`;
+}
+
+/**
+ * Proporciona una respuesta local en caso de que Gemini no esté disponible
+ */
+function getFallbackResponse(query: string, context: any): string {
+  // Lógica simple para generar una respuesta basada en palabras clave
+  const queryLower = query.toLowerCase();
+  
+  if (queryLower.includes("ruta") || queryLower.includes("enviar") || queryLower.includes("shipping")) {
+    return `✈️ Ofrecemos múltiples rutas de transporte internacional adaptadas a sus necesidades. 
+Para proporcionarle información específica, necesito conocer:
+
+¿Desde qué origen saldría su carga?${formatQuickReplies([
+      "Shanghai", "Shenzhen", "Hong Kong", "Busan", 
+      "Rotterdam", "Hamburg", "New York", "Miami"
+    ])}`;
+  }
+  
+  if (queryLower.includes("precio") || queryLower.includes("costo") || queryLower.includes("tarifa") || queryLower.includes("cotiz")) {
+    return `💰 Para proporcionarle una cotización, necesito algunos datos.
+
+¿De qué origen saldría su carga?${formatQuickReplies([
+      "Shanghai", "Shenzhen", "Hong Kong", "Busan", 
+      "Rotterdam", "Hamburg", "New York", "Miami"
+    ])}`;
+  }
+  
+  if (queryLower.includes("tiempo") || queryLower.includes("duración") || queryLower.includes("tránsito")) {
+    return `⏱️ Los tiempos de tránsito varían según la ruta.
+
+¿Podría indicarme el origen?${formatQuickReplies([
+      "Shanghai", "Shenzhen", "Hong Kong", "Busan", 
+      "Rotterdam", "Hamburg", "New York", "Miami"
+    ])}`;
+  }
+  
+  if (queryLower.includes("servicio") || queryLower.includes("ofrecen")) {
+    return `✨ Servicios logísticos de Nowports:
+
+1. 🚢 Transporte internacional (marítimo, aéreo, terrestre)
+2. 📝 Agenciamiento aduanal y documentación
+3. 💰 Financiamiento para importadores
+4. 🔍 Tracking en tiempo real
+5. 🏭 Almacenaje y distribución
+
+¿Sobre cuál necesita más información?${formatQuickReplies([
+      "Transporte", "Aduanas", "Financiamiento", "Tracking", "Almacenaje"
+    ])}`;
+  }
+  
+  if (queryLower.includes("operacion") || queryLower.includes("soporte") || queryLower.includes("factur") || 
+      queryLower.includes("document") || queryLower.includes("liberacion") || queryLower.includes("reserva")) {
+    return `🛠️ Para asistirle con operaciones, por favor especifique el área:${formatQuickReplies([
+      "Soporte general", "Facturación", "Documentos", "Liberación", "Reservas"
+    ])}`;
+  }
+  
+  // Respuesta genérica
+  return `👋 ¡Gracias por contactar a Nowports!
+
+¿Cómo podemos ayudarle hoy?${formatQuickReplies([
+    "Rutas y tarifas", "Cotización", "Servicios", "Tracking", "Contactar ejecutivo"
+  ])}`;
+}
+
+/**
  * Genera una respuesta usando Gemini para una consulta de logística
  */
 export async function getGeminiResponse(
@@ -242,34 +314,40 @@ OPCIONES PARA CANTIDAD:
 GUÍA PARA FLUJO SECUENCIAL DE COTIZACIÓN:
 1. Cuando el usuario solicite información sobre rutas/servicios:
    - Preguntar origen (ofrecer quickReplies con puertos/ciudades populares)
+   - Formato: [quickReplies: Shanghai, Shenzhen, Hong Kong, Ningbo, Rotterdam, Hamburg, Los Angeles, Miami]
 
 2. Tras recibir origen:
    - Preguntar destino (ofrecer quickReplies con puertos/ciudades populares)
+   - Formato: [quickReplies: Medellín, Bogotá, Cartagena, Ciudad de México, Buenos Aires, Santiago, Lima]
 
 3. Tras recibir destino:
    - Presentar información general de la ruta
    - Preguntar SOLO por el tipo de carga (ofrecer quickReplies con las opciones del cargoTypeOptions)
-   - Usar formato: "¿Qué tipo de carga desea transportar?" seguido de opciones seleccionables
+   - Formato: [quickReplies: Electrónicos, Textiles, Maquinaria, Automotriz, Alimentos, Otro]
 
 4. Tras recibir tipo de carga:
    - Preguntar SOLO por el peso/dimensiones (ofrecer quickReplies con las opciones del weightDimensionsOptions)
-   - Usar formato: "¿Cuál es el peso aproximado de su carga?" seguido de opciones seleccionables
+   - Formato: [quickReplies: Carga ligera, Carga media, Carga pesada, Carga muy pesada]
 
 5. Tras recibir peso/dimensiones:
    - Preguntar SOLO por el Incoterm (ofrecer quickReplies con las opciones del incotermsOptions)
-   - Usar formato: "¿Qué término de negociación (Incoterm) prefiere?" seguido de opciones seleccionables
+   - Formato: [quickReplies: EXW, FCA, FOB, CIF, DAP, DDP]
 
 6. Tras recibir Incoterm:
    - Preguntar SOLO por la cantidad (ofrecer quickReplies con las opciones del quantityOptions)
-   - Usar formato: "¿Qué cantidad desea transportar?" seguido de opciones seleccionables
+   - Formato: [quickReplies: Menos de 1 contenedor, 1 contenedor (20 pies), 1 contenedor (40 pies), 2-5 contenedores, Más de 5 contenedores]
 
 7. Tras recibir todos los datos:
    - Presentar cotización detallada
    - Ofrecer opciones de financiamiento si aplica
-   - Preguntar si desea proceder o modificar algún parámetro
+   - Formato: [quickReplies: Proceder con cotización, Modificar parámetros, Contactar ejecutivo]
 
-IMPORTANTE: Cada paso debe ser independiente y esperar la respuesta del usuario antes de pasar al siguiente.
-NO solicitar múltiples datos en un solo mensaje.
+IMPORTANTE: 
+- Cada paso debe ser independiente y esperar la respuesta del usuario antes de pasar al siguiente.
+- NO solicitar múltiples datos en un solo mensaje.
+- SIEMPRE usar el formato [quickReplies: opción1, opción2, opción3] al final de tus mensajes cuando presentes opciones.
+- Las opciones en quickReplies deben ser breves (1-3 palabras cuando sea posible).
+- Las quickReplies deben aparecer después de tu pregunta, no en medio del texto.
 `;
 
     // Instrucciones para detectar patrones y activar componentes específicos
@@ -280,22 +358,26 @@ PATRONES DE DETECCIÓN (usa estos patrones para determinar cuándo sugerir compo
    - Detectar códigos de seguimiento con formato ECRxxxxxxx (exportación) o ICRxxxxxxx (importación)
    - Detectar frases como "rastrear envío", "consultar estado", "dónde está mi pedido", "tracking", "seguimiento"
    - Sugerir: "Para ver el estado de su envío, necesito el código de seguimiento en formato ECRxxxxxxx o ICRxxxxxxx"
+   - Formato: [quickReplies: Ingresar código, Contactar soporte]
 
 2. Contacto con Ejecutivo:
    - Detectar frases como "hablar con ejecutivo", "contactar agente", "necesito ayuda personal", "llamar"
    - Si hay un código de seguimiento mencionado, sugerir contactar al ejecutivo asignado a ese envío
    - Sugerir: "¿Le gustaría contactar a su ejecutivo asignado? Puede hacerlo por WhatsApp, llamada o email"
+   - Formato: [quickReplies: WhatsApp, Llamada, Email, No por ahora]
 
 3. Solicitud de Cotización:
    - Detectar frases sobre cotizar, precios, tarifas, costo de envío
    - Activar flujo de cotización SECUENCIAL paso a paso (origen, destino, tipo de carga, etc.)
    - Guiar al usuario a través de cada paso con opciones seleccionables
    - NO solicitar todos los datos a la vez
+   - Usar siempre el formato [quickReplies: ...] para presentar opciones
 
 4. Consulta de Documentos:
    - Detectar frases sobre documentos, requisitos, papeles, trámites
    - Si hay un código de seguimiento mencionado, sugerir ver los documentos de ese envío
    - Sugerir: "¿Desea consultar los documentos disponibles para su envío?"
+   - Formato: [quickReplies: Ver documentos, Consultar requisitos, No por ahora]
 `;
 
     // Información sobre requisitos para cotizaciones y operaciones
@@ -451,6 +533,15 @@ INFORMACIÓN SOBRE LA APLICACIÓN DE CHAT:
 - Los usuarios esperan respuestas directas que aprovechen estas capacidades visuales
 - La aplicación maneja flujos específicos para cotizaciones, seguimiento y contacto con ejecutivos
 - Tienes la capacidad de ofrecer botones con opciones seleccionables (quickReplies) que el usuario puede pulsar en lugar de escribir
+- SIEMPRE debes terminar tu mensaje con [quickReplies: opción1, opción2, ...] cuando presentes opciones.
+- Las opciones en quickReplies deben ser BREVES - preferiblemente 1-3 palabras para mejor UI
+
+FORMATO UI PARA OPCIONES SELECCIONABLES:
+- Cuando presentes opciones seleccionables, siempre usa el formato exacto: [quickReplies: opción1, opción2, opción3]
+- Este formato debe aparecer al FINAL de tu mensaje, después de tu pregunta o información
+- Debe haber un espacio después de los dos puntos y cada opción debe estar separada por comas
+- Ejemplo: [quickReplies: Marítimo, Aéreo, Terrestre]
+- Las opciones deben ser breves y descriptivas
 
 INFORMACIÓN SOBRE NOWPORTS:
 - Nowports es un transitario digital que facilita el comercio internacional con tecnología innovadora
@@ -580,7 +671,14 @@ Ahora responde a la consulta del usuario de manera directa, concisa y orientada 
       data.candidates[0].content.parts &&
       data.candidates[0].content.parts[0]
     ) {
-      return data.candidates[0].content.parts[0].text;
+      let response = data.candidates[0].content.parts[0].text;
+      
+      // Asegurar que la respuesta tenga el formato correcto de quickReplies si no lo tiene
+      if (!response.includes("[quickReplies:") && shouldHaveQuickReplies(query, response)) {
+        response = addDefaultQuickReplies(query, response);
+      }
+      
+      return response;
     }
 
     throw new Error("Formato de respuesta no esperado de Gemini");
@@ -591,68 +689,125 @@ Ahora responde a la consulta del usuario de manera directa, concisa y orientada 
 }
 
 /**
- * Proporciona una respuesta local en caso de que Gemini no esté disponible
+ * Determina si una respuesta debería tener quickReplies basado en el contexto
  */
-function getFallbackResponse(query: string, context: any): string {
-  // Lógica simple para generar una respuesta basada en palabras clave
+function shouldHaveQuickReplies(query: string, response: string): boolean {
+  // Si ya tiene quickReplies, no es necesario añadir más
+  if (response.includes('[quickReplies:')) {
+    return false;
+  }
+  
   const queryLower = query.toLowerCase();
+  const responseLower = response.toLowerCase();
   
-  if (queryLower.includes("ruta") || queryLower.includes("enviar") || queryLower.includes("shipping")) {
-    return `✈️ Ofrecemos múltiples rutas de transporte internacional adaptadas a sus necesidades. 
-Para proporcionarle información específica, necesitaríamos conocer:
+  // Verificar si la respuesta contiene una pregunta
+  const hasQuestion = response.includes('?');
+  
+  // Verificar si la consulta o respuesta incluye palabras clave que indican necesidad de opciones
+  const needsOriginOptions = responseLower.includes('origen') && !responseLower.includes('el origen es');
+  const needsDestinationOptions = responseLower.includes('destino') && !responseLower.includes('el destino es');
+  const needsCargoTypeOptions = responseLower.includes('tipo de carga') || responseLower.includes('tipo de mercancía');
+  const needsWeightOptions = (responseLower.includes('peso') || responseLower.includes('dimensiones')) && !responseLower.includes('el peso es');
+  const needsIncotermOptions = (responseLower.includes('incoterm') || responseLower.includes('término de negociación')) && !responseLower.includes('el incoterm es');
+  const needsQuantityOptions = responseLower.includes('cantidad') && !responseLower.includes('la cantidad es');
+  
+  const needsOptions = 
+    queryLower.includes('ruta') || 
+    queryLower.includes('cotiz') || 
+    queryLower.includes('tarifa') || 
+    queryLower.includes('precio') || 
+    needsOriginOptions || 
+    needsDestinationOptions || 
+    needsCargoTypeOptions || 
+    needsWeightOptions || 
+    needsIncotermOptions || 
+    needsQuantityOptions;
+    
+  return hasQuestion && needsOptions;
+}
 
-1. Origen de su carga
-2. Destino de entrega
-
-¿Podría indicarme el origen de su carga?`;
+/**
+ * Añade quickReplies predeterminadas basado en el contexto de la consulta y respuesta
+ */
+function addDefaultQuickReplies(query: string, response: string): string {
+  const responseLower = response.toLowerCase();
+  
+  // No añadir quickReplies si ya están presentes
+  if (response.includes('[quickReplies:')) {
+    return response;
   }
   
-  if (queryLower.includes("precio") || queryLower.includes("costo") || queryLower.includes("tarifa") || queryLower.includes("cotiz")) {
-    return `💰 Para proporcionarle una cotización, necesito algunos datos.
-
-¿De qué origen saldría su carga?`;
+  if (responseLower.includes('origen')) {
+    return response + formatQuickReplies([
+      "Shanghai", "Shenzhen", "Hong Kong", "Busan", 
+      "Rotterdam", "Hamburg", "New York", "Miami"
+    ]);
   }
   
-  if (queryLower.includes("tiempo") || queryLower.includes("duración") || queryLower.includes("tránsito")) {
-    return `⏱️ Los tiempos de tránsito varían según la ruta.
-
-¿Podría indicarme el origen y destino que le interesa?`;
+  if (responseLower.includes('destino')) {
+    return response + formatQuickReplies([
+      "Medellín", "Bogotá", "Cartagena", "Ciudad de México", 
+      "Buenos Aires", "Santiago", "Lima", "São Paulo"
+    ]);
   }
   
-  if (queryLower.includes("servicio") || queryLower.includes("ofrecen")) {
-    return `✨ Servicios logísticos de Nowports:
-
-1. 🚢 Transporte internacional (marítimo, aéreo, terrestre)
-2. 📝 Agenciamiento aduanal y documentación
-3. 💰 Financiamiento para importadores
-4. 🔍 Tracking en tiempo real
-5. 🏭 Almacenaje y distribución
-
-¿Sobre cuál necesita más información?`;
+  if (responseLower.includes('tipo de carga')) {
+    return response + formatQuickReplies([
+      "Electrónicos", "Textiles", "Maquinaria", "Automotriz", "Alimentos", "Químicos", "Otro"
+    ]);
   }
   
-  if (queryLower.includes("operacion") || queryLower.includes("soporte") || queryLower.includes("factur") || 
-      queryLower.includes("document") || queryLower.includes("liberacion") || queryLower.includes("reserva")) {
-    return `🛠️ Para asistirle con operaciones, por favor especifique el área:
-
-• Soporte general
-• Facturación
-• Documentos
-• Liberación
-• Reservas
-
-¿En cuál de estas áreas necesita apoyo?`;
+  if (responseLower.includes('peso') || responseLower.includes('dimensiones')) {
+    return response + formatQuickReplies([
+      "Carga ligera", "Carga media", "Carga pesada", "Carga muy pesada"
+    ]);
   }
   
-  // Respuesta genérica
-  return `👋 ¡Gracias por contactar a Nowports!
-
-¿Cómo podemos ayudarle hoy? 
-- ¿Información sobre rutas y tarifas?
-- ¿Asesoría sobre opciones de transporte?
-- ¿Servicios específicos como despacho aduanal o financiamiento?
-
-Por favor, proporciónenos más detalles.`;
+  if (responseLower.includes('incoterm') || responseLower.includes('término de negociación')) {
+    return response + formatQuickReplies([
+      "EXW", "FCA", "FOB", "CIF", "DAP", "DDP"
+    ]);
+  }
+  
+  if (responseLower.includes('cantidad') || responseLower.includes('contenedor')) {
+    return response + formatQuickReplies([
+      "Menos de 1 contenedor", "1 contenedor (20 pies)", "1 contenedor (40 pies)", 
+      "2-5 contenedores", "Más de 5 contenedores"
+    ]);
+  }
+  
+  // Realizar detección más específica por contexto
+  if (responseLower.includes('cotización') || 
+      responseLower.includes('precio') || 
+      responseLower.includes('tarifa')) {
+    return response + formatQuickReplies([
+      "Solicitar cotización", "Ver tarifas", "Más información", "Contactar ejecutivo"
+    ]);
+  }
+  
+  if (responseLower.includes('servicio') || responseLower.includes('servicio')) {
+    return response + formatQuickReplies([
+      "Transporte", "Aduanas", "Financiamiento", "Seguimiento", "Almacenaje"
+    ]);
+  }
+  
+  if (responseLower.includes('tracking') || 
+      responseLower.includes('seguimiento') || 
+      responseLower.includes('envío')) {
+    return response + formatQuickReplies([
+      "Ingresar código", "Ver estado", "Documentos", "Contactar soporte"
+    ]);
+  }
+  
+  // Si la respuesta contiene una pregunta pero no detectamos un contexto específico
+  if (response.includes('?')) {
+    return response + formatQuickReplies([
+      "Sí", "No", "Más información", "Contactar ejecutivo"
+    ]);
+  }
+  
+  // Si no hay nada más específico y no contiene una pregunta, no añadir quickReplies
+  return response;
 }
 
 /**
