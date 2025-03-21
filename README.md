@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nowports Assistant
 
-## Getting Started
+## Descripción del Proyecto
 
-First, run the development server:
+Nowports Assistant es una solución interactiva de asistencia al cliente que utiliza tecnología de chat inteligente para facilitar la comunicación entre los usuarios de servicios logísticos y la plataforma Nowports. Este asistente permite a los clientes realizar consultas sobre envíos, obtener actualizaciones en tiempo real, gestionar documentación y conectarse con agentes humanos cuando sea necesario.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Funcionalidades Principales
+
+- **Chat Interactivo**: Interfaz conversacional intuitiva con soporte para markdown.
+- **Seguimiento de Envíos**: Visualización gráfica del estado y ubicación de los envíos.
+- **Notificaciones por WhatsApp**: Configuración de alertas para recibir actualizaciones en tiempo real.
+- **Respuestas Rápidas**: Opciones predefinidas para facilitar la interacción del usuario.
+- **Multilingüe**: Soporte para varios idiomas (español e inglés inicialmente).
+- **Modo Oscuro/Claro**: Interfaz adaptable a las preferencias del usuario.
+- **Integración con Ejecutivos**: Conexión directa con agentes humanos cuando se requiere atención personalizada.
+
+## Tipos de Datos y Modelado
+
+La aplicación utiliza una estructura de datos eficiente y escalable:
+
+### Mensajes y Chat
+- `ChatMessage`: Estructura principal para mensajes que incluye:
+  - Contenido textual (con soporte Markdown)
+  - Archivos adjuntos (documentos, imágenes)
+  - Respuestas rápidas
+  - Visualizaciones de seguimiento
+  - Datos de agentes/ejecutivos
+  - Información para alertas WhatsApp
+
+### Seguimiento de Envíos
+- `TrackingVisualization`: Representación visual del estado del envío:
+  - Puntos de origen y destino (coordenadas y nombres)
+  - Ubicación actual
+  - Hitos del viaje con estados (completado/en progreso/pendiente)
+  - Información del transportista y contenedores
+  - Fechas estimadas de llegada
+
+### Notificaciones
+- `WhatsAppAlertData`: Configuración para notificaciones móviles:
+  - Número de teléfono y mensaje personalizado
+  - Tipo de notificación (estado, llegada, retraso, documentos)
+  - ID de envío relacionado
+
+### Interacción Asistida
+- `QuickReply`: Opciones interactivas para respuesta rápida
+- `CustomerAgentData`: Información del ejecutivo asignado 
+- `DocumentAttachment`: Estructura para documentos adjuntos
+
+## Capturas de Pantalla / Interfaces
+
+### Vista Principal
+```
++----------------------------------+
+|         Nowports Assistant       |
++----------------------------------+
+|                                  |
+|  +------------------------------+|
+|  |                              ||
+|  |        Chat Interface        ||
+|  |                              ||
+|  +------------------------------+|
+|                                  |
+|  +------------------------------+|
+|  |                              ||
+|  |       Information Panel      ||
+|  |                              ||
+|  +------------------------------+|
+|                                  |
++----------------------------------+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Seguimiento de Envíos
+```
++----------------------------------+
+|      Shipment #MSKU7627321      |
++----------------------------------+
+|                                  |
+|  +-Origin--------Destination-+  |
+|  |   O=====[SHIP]=======>O   |  |
+|  +--------------------------+  |
+|                                  |
+|  +--------- Timeline ---------+  |
+|  | ● Recogida     [Completado]|  |
+|  | ● En tránsito  [En progreso]  |
+|  | ○ Llegada      [Pendiente] |  |
+|  | ○ Entrega      [Pendiente] |  |
+|  +--------------------------+  |
+|                                  |
++----------------------------------+
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Notificaciones WhatsApp
+```
++----------------------------------+
+|      Alertas por WhatsApp        |
++----------------------------------+
+|                                  |
+|  Teléfono: +52 123 4567 8901     |
+|                                  |
+|  [Ejemplo de Notificación]       |
+|  +------------------------------+|
+|  | Tu embarque MSKU7627321 ha   ||
+|  | llegado al puerto de Long    ||
+|  | Beach. Despacho aduanal en   ||
+|  | las próximas 24 horas.       ||
+|  +------------------------------+|
+|                                  |
+|  [ Cerrar ]    [ Abrir WhatsApp ]|
++----------------------------------+
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Factibilidad y Usabilidad
 
-## Learn More
+### Factibilidad Técnica
+- **Implementación Frontend**: Construido con Next.js y TypeScript para garantizar robustez y tipado seguro.
+- **Diseño Responsivo**: Funciona en dispositivos móviles y de escritorio gracias a Tailwind CSS.
+- **Integración de Servicios**: Preparado para conectarse a APIs de tracking, notificaciones y gestión documental.
+- **Escalabilidad**: Arquitectura modular que permite añadir nuevas funcionalidades sin afectar las existentes.
 
-To learn more about Next.js, take a look at the following resources:
+### Usabilidad
+- **Diseño Intuitivo**: Interfaz conversacional natural que no requiere aprendizaje especial.
+- **Respuestas Rápidas**: Minimiza la escritura del usuario al ofrecer opciones predefinidas contextualmente relevantes.
+- **Visualizaciones Claras**: Representación gráfica del estado de envíos para mejor comprensión.
+- **Accesibilidad**: Soporte para modo oscuro y traducción a múltiples idiomas.
+- **Opciones de Contacto**: Transición fluida entre el asistente automatizado y la atención humana.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Valor para el Negocio
+- **Reducción de Carga**: Disminuye la necesidad de atención telefónica para consultas básicas.
+- **Disponibilidad 24/7**: Ofrece asistencia continua a los clientes en cualquier zona horaria.
+- **Personalización**: Adapta las respuestas según el contexto del cliente y su historial.
+- **Notificaciones Proactivas**: Informa a los clientes sobre eventos importantes sin esperar a que consulten.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tecnologías Utilizadas
 
-## Deploy on Vercel
+- **Frontend**: Next.js, React, TypeScript
+- **Estilos**: Tailwind CSS
+- **Internacionalización**: next-i18next
+- **Visualización Markdown**: react-markdown
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Instalación y Uso
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Instalar dependencias
+npm install
+
+# Iniciar en modo desarrollo
+npm run dev
+
+# Construir para producción
+npm run build
+
+# Iniciar en producción
+npm start
+```
+
+## Próximos Pasos
+
+- Integración con APIs reales de tracking de Nowports
+- Implementación de autenticación de usuarios
+- Expandir capacidades de IA para respuestas más complejas
+- Añadir más idiomas y personalización regional
+- Desarrollar widgets para integración en sitios de terceros
