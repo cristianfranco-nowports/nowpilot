@@ -882,27 +882,73 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
         isLoading: true
       }));
 
-      // Simular respuesta del asistente después de un breve retraso
+      // Simular respuesta del asistente pidiendo el código de seguimiento
+      setTimeout(() => {
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: "Para poder mostrarte el estado de tu embarque, necesito que me proporciones el código de seguimiento. Los códigos suelen tener el formato ECRxxxxxxx para exportaciones o ICRxxxxxxx para importaciones.",
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          quickReplies: [
+            { label: 'ECR2503586', value: 'Mi código de seguimiento es ECR2503586', icon: '📦' },
+            { label: 'ICR1982375', value: 'Mi código de seguimiento es ICR1982375', icon: '📦' },
+            { label: 'No conozco mi código', value: 'No tengo mi código de seguimiento', icon: '❓' }
+          ]
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 1000);
+      
+      return;
+    }
+    
+    // Verificar si es una solicitud con código de seguimiento
+    const trackingCodeRegex = /(?:código de seguimiento|código|tracking|seguimiento) (?:es )?(ECR\d{7}|ICR\d{7})/i;
+    const trackingMatch = value.match(trackingCodeRegex);
+    
+    if (trackingMatch && trackingMatch[1]) {
+      const trackingCode = trackingMatch[1].toUpperCase();
+      
+      // Crear un mensaje del usuario
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Simular respuesta del asistente con la visualización del tracking
       setTimeout(() => {
         const trackingData: TrackingVisualization = {
-          shipmentId: 'ECR2503586',
+          shipmentId: trackingCode,
           origin: { 
-            name: 'Manzanillo, México',
-            lat: 19.0495,
-            lng: -104.3140
+            name: trackingCode.startsWith('ECR') ? 'Manzanillo, México' : 'Shanghai, China',
+            lat: trackingCode.startsWith('ECR') ? 19.0495 : 31.2304,
+            lng: trackingCode.startsWith('ECR') ? -104.3140 : 121.4737
           },
           destination: { 
-            name: 'Long Beach, EE.UU.',
-            lat: 33.7701,
-            lng: -118.1937
+            name: trackingCode.startsWith('ECR') ? 'Long Beach, EE.UU.' : 'Manzanillo, México',
+            lat: trackingCode.startsWith('ECR') ? 33.7701 : 19.0495,
+            lng: trackingCode.startsWith('ECR') ? -118.1937 : -104.3140
           },
           currentLocation: { 
-            name: 'Océano Pacífico',
-            lat: 24.5000,
-            lng: -112.0000
+            name: trackingCode.startsWith('ECR') ? 'Océano Pacífico' : 'Puerto de Shanghai',
+            lat: trackingCode.startsWith('ECR') ? 24.5000 : 31.2304,
+            lng: trackingCode.startsWith('ECR') ? -112.0000 : 121.4737
           },
-          estimatedArrival: '04/04/2025',
-          milestones: [
+          estimatedArrival: trackingCode.startsWith('ECR') ? '04/04/2025' : '15/05/2025',
+          milestones: trackingCode.startsWith('ECR') ? [
             { name: 'Recogida', date: '15/11/2023', status: 'completed' },
             { name: 'Llegada a puerto de origen', date: '18/11/2023', status: 'completed' },
             { name: 'Carga en buque', date: '20/11/2023', status: 'completed' },
@@ -910,22 +956,72 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
             { name: 'Llegada a puerto destino', date: '04/04/2025', status: 'upcoming' },
             { name: 'Despacho aduanal', date: 'Pendiente', status: 'upcoming' },
             { name: 'Entrega final', date: 'Pendiente', status: 'upcoming' }
+          ] : [
+            { name: 'Booking confirmado', date: '10/02/2024', status: 'completed' },
+            { name: 'Carga lista en almacén', date: '15/02/2024', status: 'completed' },
+            { name: 'Documentación en proceso', date: 'Actual', status: 'inProgress' },
+            { name: 'Embarque programado', date: '01/03/2024', status: 'upcoming' },
+            { name: 'En tránsito marítimo', date: 'Pendiente', status: 'upcoming' },
+            { name: 'Llegada a puerto destino', date: '15/05/2025', status: 'upcoming' },
+            { name: 'Entrega final', date: 'Pendiente', status: 'upcoming' }
           ],
-          carrier: 'Maersk Line',
-          vesselName: 'Maersk Semarang',
-          containerNumbers: ['MSKU7627321']
+          carrier: trackingCode.startsWith('ECR') ? 'Maersk Line' : 'COSCO Shipping',
+          vesselName: trackingCode.startsWith('ECR') ? 'Maersk Semarang' : 'COSCO Harmony',
+          containerNumbers: trackingCode.startsWith('ECR') ? ['MSKU7627321'] : ['CSLU9876543']
         };
 
         const assistantMessage: ChatMessage = {
           id: uuidv4(),
-          content: "Para dar seguimiento a tu embarque con Nowports, te ofrecemos las siguientes opciones:",
+          content: `He encontrado la información de tu embarque con código ${trackingCode}:`,
           role: 'assistant',
           timestamp: Date.now().toString(),
           trackingVisualization: trackingData,
           quickReplies: [
-            { label: 'Actualizar ubicación', value: 'Actualizar ubicación de mi embarque', icon: '🔄' },
-            { label: 'Ver documentos', value: 'Ver documentos del envío ECR2503586', icon: '📄' },
+            { label: 'Actualizar ubicación', value: `Actualizar ubicación de mi embarque ${trackingCode}`, icon: '🔄' },
+            { label: 'Ver documentos', value: `Ver documentos del envío ${trackingCode}`, icon: '📄' },
             { label: 'Contactar ejecutivo', value: 'Contactar con mi agente asignado', icon: '👨‍💼' }
+          ]
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 1000);
+      
+      return;
+    }
+    
+    // Verificar si el usuario no tiene su código de seguimiento
+    if (value.toLowerCase().includes('no tengo mi código') || value.toLowerCase().includes('no conozco mi código')) {
+      // Crear un mensaje del usuario
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Simular respuesta del asistente
+      setTimeout(() => {
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: "No hay problema. También puedes consultar tus embarques de otras formas:\n\n1. Por nombre de tu empresa\n2. Por número de contenedor\n3. Por número de reserva\n\n¿Cuál de estas opciones prefieres utilizar?",
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          quickReplies: [
+            { label: 'Por empresa', value: 'Buscar por nombre de empresa', icon: '🏢' },
+            { label: 'Por contenedor', value: 'Buscar por número de contenedor', icon: '📦' },
+            { label: 'Por reserva', value: 'Buscar por número de reserva', icon: '🔖' },
+            { label: 'Contactar ejecutivo', value: 'Necesito hablar con mi ejecutivo', icon: '👨‍💼' }
           ]
         };
 
