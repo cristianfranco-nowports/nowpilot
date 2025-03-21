@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChatMessage, DocumentAttachment, QuickReply, TrackingVisualization } from '../types/chat';
+import { ChatMessage, DocumentAttachment, QuickReply, TrackingVisualization, CustomerAgentData } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
 import QuickReplies from './QuickReplies';
 import dynamic from 'next/dynamic';
@@ -83,6 +83,76 @@ const DocumentPreview: React.FC<{ document: DocumentAttachment; theme: 'light' |
   );
 };
 
+const CustomerAgent: React.FC<{ data: CustomerAgentData; theme: 'light' | 'dark' }> = ({ data, theme }) => {
+  const themeClasses = {
+    light: 'bg-white border-gray-200 text-gray-800',
+    dark: 'bg-gray-700 border-gray-600 text-gray-100'
+  };
+
+  return (
+    <div className={`border rounded-lg p-4 mt-3 ${themeClasses[theme]} animate-fadeIn`}>
+      <div className="flex items-center">
+        <div className="flex-shrink-0">
+          <div className={`h-12 w-12 rounded-full flex items-center justify-center ${theme === 'light' ? 'bg-blue-100 text-blue-600' : 'bg-blue-800 text-blue-200'}`}>
+            {data.avatarUrl ? (
+              <img src={data.avatarUrl} alt={data.name} className="h-12 w-12 rounded-full" />
+            ) : (
+              <span className="text-lg font-semibold">{data.name.charAt(0)}</span>
+            )}
+          </div>
+        </div>
+        <div className="ml-4">
+          <h4 className="text-sm font-semibold">{data.name}</h4>
+          <p className={`text-xs ${theme === 'light' ? 'text-gray-600' : 'text-gray-300'}`}>{data.position}</p>
+          <div className="mt-2 flex space-x-3">
+            <a 
+              href={`tel:${data.phone}`} 
+              className={`inline-flex items-center px-3 py-1 text-xs leading-4 font-medium rounded-md ${
+                theme === 'light' 
+                  ? 'text-green-700 bg-green-100 hover:bg-green-200' 
+                  : 'text-green-300 bg-green-900/30 hover:bg-green-800/50'
+              } transition duration-150 ease-in-out`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              Llamar
+            </a>
+            <a 
+              href={`https://wa.me/${data.phone.replace(/\D/g, '')}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`inline-flex items-center px-3 py-1 text-xs leading-4 font-medium rounded-md ${
+                theme === 'light' 
+                  ? 'text-blue-700 bg-blue-100 hover:bg-blue-200' 
+                  : 'text-blue-300 bg-blue-900/30 hover:bg-blue-800/50'
+              } transition duration-150 ease-in-out`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              WhatsApp
+            </a>
+            <a 
+              href={`mailto:${data.email}`} 
+              className={`inline-flex items-center px-3 py-1 text-xs leading-4 font-medium rounded-md ${
+                theme === 'light' 
+                  ? 'text-purple-700 bg-purple-100 hover:bg-purple-200' 
+                  : 'text-purple-300 bg-purple-900/30 hover:bg-purple-800/50'
+              } transition duration-150 ease-in-out`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Email
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQuickReplySelect }) => {
   const isUser = message.role === 'user';
   
@@ -130,6 +200,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
 
   const hasAttachments = message.attachments && message.attachments.length > 0;
   const hasQuickReplies = message.quickReplies && message.quickReplies.length > 0;
+  const hasCustomerAgent = message.customerAgentData !== undefined;
 
   return (
     <div className={containerStyles}>
@@ -183,6 +254,11 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
                 {message.content}
               </ReactMarkdown>
             </div>
+          )}
+          
+          {/* Customer Agent Information */}
+          {hasCustomerAgent && message.customerAgentData && (
+            <CustomerAgent data={message.customerAgentData} theme={theme} />
           )}
           
           {/* Tracking visualization */}

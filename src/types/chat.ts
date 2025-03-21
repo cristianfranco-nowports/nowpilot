@@ -18,6 +18,14 @@ export interface DocumentAttachment {
   content?: string; // Para simulación, en un entorno real no se incluiría el contenido en el objeto
 }
 
+export interface CustomerAgentData {
+  name: string;
+  position: string;
+  email: string;
+  phone: string;
+  avatarUrl?: string;
+}
+
 export interface TrackingMilestone {
   name: string;
   date: string;
@@ -63,6 +71,7 @@ export interface ChatMessage {
   quickRepliesVariant?: 'default' | 'feature';
   quickRepliesColumns?: 1 | 2 | 3;
   trackingVisualization?: TrackingVisualization;
+  customerAgentData?: CustomerAgentData;
 }
 
 export interface ChatState {

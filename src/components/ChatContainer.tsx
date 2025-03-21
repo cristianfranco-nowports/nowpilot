@@ -1036,7 +1036,14 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
     }
     
     // Verificar si es una solicitud para contactar con el agente asignado
-    if (value.toLowerCase().includes('contactar con mi agente') || value.toLowerCase().includes('contactar agente')) {
+    if (value.toLowerCase().includes('contactar con mi agente') || value.toLowerCase().includes('contactar agente') || value.toLowerCase().includes('contactar ejecutivo')) {
+      // Verificar si tenemos un mensaje previo con información de seguimiento
+      const previousMessages = chatState.messages;
+      const hasPreviousTrackingInfo = previousMessages.some(msg => 
+        msg.trackingVisualization || 
+        (msg.content && msg.content.includes('Información del envío'))
+      );
+
       // Crear un mensaje del usuario
       const userMessage: ChatMessage = {
         id: uuidv4(),
@@ -1052,21 +1059,82 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
         isLoading: true
       }));
 
-      // Simular respuesta del asistente después de un breve retraso
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: uuidv4(),
-          content: "Entendido. Para contactar a tu agente asignado, por favor proporciona tu número de cuenta Nowports o el nombre de tu empresa. Con esta información, podré localizar a tu agente y facilitar la comunicación de inmediato.",
-          role: 'assistant',
-          timestamp: Date.now().toString(),
-        };
+      // Si hay información de seguimiento previa, mostrar opciones de contacto directamente
+      if (hasPreviousTrackingInfo) {
+        // Buscar el código de seguimiento en los mensajes anteriores si está disponible
+        let shipmentId = '';
+        let shipmentMsg = previousMessages.find(msg => msg.trackingVisualization);
+        if (shipmentMsg && shipmentMsg.trackingVisualization) {
+          shipmentId = shipmentMsg.trackingVisualization.shipmentId;
+        } else {
+          // Intentar extraer el código de envío del contenido del mensaje
+          const trackingCodeRegex = /\b([A-Z]{3}\d{7})\b/;
+          for (let i = previousMessages.length - 1; i >= 0; i--) {
+            const match = previousMessages[i].content.match(trackingCodeRegex);
+            if (match && match[1]) {
+              shipmentId = match[1];
+              break;
+            }
+          }
+        }
 
-        setChatState(prev => ({
-          ...prev,
-          messages: [...prev.messages, assistantMessage],
-          isLoading: false
-        }));
-      }, 800);
+        // Determinar el nombre del agente basado en el código de envío
+        const agentName = shipmentId.startsWith('ECR') ? 'María González' : 'Carlos Rodríguez';
+        
+        setTimeout(() => {
+          const assistantMessage: ChatMessage = {
+            id: uuidv4(),
+            content: `Para el envío ${shipmentId || 'actual'}, tu agente asignado es **${agentName}**. ¿Cómo prefieres contactarlo?`,
+            role: 'assistant',
+            timestamp: Date.now().toString(),
+            quickReplies: [
+              { 
+                label: '📱 WhatsApp', 
+                value: `Enviar WhatsApp a ${agentName}`,
+                icon: '📱'
+              },
+              { 
+                label: '📞 Llamada', 
+                value: `Llamar a ${agentName}`,
+                icon: '📞'
+              },
+              { 
+                label: '✉️ Email', 
+                value: `Enviar correo a ${agentName}`,
+                icon: '✉️'
+              }
+            ],
+            customerAgentData: {
+              name: agentName,
+              position: 'Ejecutivo de Cuenta',
+              email: agentName.toLowerCase().replace(' ', '.') + '@nowports.com',
+              phone: '+52 1 33 ' + (Math.floor(Math.random() * 9000000) + 1000000)
+            }
+          };
+
+          setChatState(prev => ({
+            ...prev,
+            messages: [...prev.messages, assistantMessage],
+            isLoading: false
+          }));
+        }, 800);
+      } else {
+        // Si no hay información de seguimiento previa, solicitar información
+        setTimeout(() => {
+          const assistantMessage: ChatMessage = {
+            id: uuidv4(),
+            content: "Entendido. Para contactar a tu agente asignado, por favor proporciona tu número de cuenta Nowports o el nombre de tu empresa. Con esta información, podré localizar a tu agente y facilitar la comunicación de inmediato.",
+            role: 'assistant',
+            timestamp: Date.now().toString(),
+          };
+
+          setChatState(prev => ({
+            ...prev,
+            messages: [...prev.messages, assistantMessage],
+            isLoading: false
+          }));
+        }, 800);
+      }
       
       return;
     }
