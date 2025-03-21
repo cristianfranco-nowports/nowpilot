@@ -52,7 +52,6 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold">Nowports Assistant</h1>
-              <p className="text-blue-100 mt-1">{t('intro').split(',')[0]}</p>
             </div>
             <nav className="flex items-center space-x-4">
               <LanguageSelector />

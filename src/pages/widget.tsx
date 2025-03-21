@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useTranslation } from 'next-i18next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetStaticProps } from 'next';
 import ChatWidget from '../components/ChatWidget';
 import LanguageSelector from '../components/LanguageSelector';
 
 const WidgetDemo: React.FC = () => {
+  const { t } = useTranslation('common');
+  
   // Widget configuration state
   const [widgetPosition, setWidgetPosition] = useState<'bottom-right' | 'bottom-left'>('bottom-right');
   const [widgetTheme, setWidgetTheme] = useState<'light' | 'dark'>('light');
-  const [initialMessage, setInitialMessage] = useState("¡Hola! Soy el asistente de Nowports. ¿En qué puedo ayudarte hoy?");
-  const [widgetTitle, setWidgetTitle] = useState("Nowports Assistant");
-  const [widgetSubtitle, setWidgetSubtitle] = useState("Pregúntame sobre logística y envíos");
+  const [initialMessage, setInitialMessage] = useState(t('initialMessage', "¡Hola! Soy el asistente de Nowports. ¿En qué puedo ayudarte hoy?"));
+  const [widgetTitle, setWidgetTitle] = useState(t('widgetTitle', "Nowports Assistant"));
+  const [widgetSubtitle, setWidgetSubtitle] = useState(t('widgetSubtitle', "Pregúntame sobre logística y envíos"));
+  
+  // Actualizar textos cuando cambia el idioma
+  const { i18n } = useTranslation();
+  useEffect(() => {
+    setInitialMessage(t('initialMessage', "¡Hola! Soy el asistente de Nowports. ¿En qué puedo ayudarte hoy?"));
+    setWidgetTitle(t('widgetTitle', "Nowports Assistant"));
+    setWidgetSubtitle(t('widgetSubtitle', "Pregúntame sobre logística y envíos"));
+  }, [i18n.language, t]);
   
   // UI state
   const [activeTab, setActiveTab] = useState<'appearance' | 'content' | 'code'>('appearance');
@@ -45,7 +58,7 @@ const WidgetDemo: React.FC = () => {
     <div className={`min-h-screen flex flex-col transition-colors duration-500 ${siteTheme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <Head>
         <title>Widget Studio - Nowports</title>
-        <meta name="description" content="Personaliza y configura tu widget de chat para Nowports" />
+        <meta name="description" content={t('widgetDescription', "Personaliza y configura tu widget de chat para Nowports")} />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -66,7 +79,7 @@ const WidgetDemo: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">Widget Studio</h1>
-                <p className="text-sm text-blue-100">Personaliza tu asistente virtual</p>
+                <p className="text-sm text-blue-100">{t('customizeAssistant', "Personaliza tu asistente virtual")}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -90,7 +103,7 @@ const WidgetDemo: React.FC = () => {
               </button>
               <Link href="/">
                 <a className="bg-white text-blue-700 hover:bg-blue-50 transition py-2 px-4 rounded-lg shadow font-medium">
-                  Volver al chat principal
+                  {t('backToMainChat', "Volver al chat principal")}
                 </a>
               </Link>
             </div>
@@ -115,7 +128,7 @@ const WidgetDemo: React.FC = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" />
                     </svg>
-                    Apariencia
+                    {t('appearance', "Apariencia")}
                   </span>
                 </button>
                 <button
@@ -128,7 +141,7 @@ const WidgetDemo: React.FC = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
                     </svg>
-                    Contenido
+                    {t('content', "Contenido")}
                   </span>
                 </button>
                 <button
@@ -141,7 +154,7 @@ const WidgetDemo: React.FC = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
-                    Código
+                    {t('code', "Código")}
                   </span>
                 </button>
               </div>
@@ -152,7 +165,7 @@ const WidgetDemo: React.FC = () => {
                 {activeTab === 'appearance' && (
                   <div className="space-y-6 animate-fadeIn">
                     <div>
-                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Posición</h3>
+                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('position', 'Posición')}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div 
                           className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -166,8 +179,8 @@ const WidgetDemo: React.FC = () => {
                             <div className="absolute bottom-2 right-2 h-4 w-4 bg-blue-500 rounded-full"></div>
                           </div>
                           <div className="ml-4">
-                            <h4 className={`font-medium ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Inferior Derecha</h4>
-                            <p className={`text-sm ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Posición estándar</p>
+                            <h4 className={`font-medium ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>{t('bottomRight', "Inferior Derecha")}</h4>
+                            <p className={`text-sm ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('standardPosition', "Posición estándar")}</p>
                           </div>
                         </div>
                         <div 
@@ -182,15 +195,15 @@ const WidgetDemo: React.FC = () => {
                             <div className="absolute bottom-2 left-2 h-4 w-4 bg-blue-500 rounded-full"></div>
                           </div>
                           <div className="ml-4">
-                            <h4 className={`font-medium ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Inferior Izquierda</h4>
-                            <p className={`text-sm ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Alternativo</p>
+                            <h4 className={`font-medium ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>{t('bottomLeft', "Inferior Izquierda")}</h4>
+                            <p className={`text-sm ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('alternative', "Alternativo")}</p>
                           </div>
                         </div>
                       </div>
                     </div>
                     
                     <div>
-                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Tema del Widget</h3>
+                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('widgetTheme', 'Tema del Widget')}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div 
                           className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -204,8 +217,8 @@ const WidgetDemo: React.FC = () => {
                             <div className="h-3 w-full bg-blue-500 rounded-t-lg"></div>
                           </div>
                           <div className="ml-4">
-                            <h4 className={`font-medium ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Claro</h4>
-                            <p className={`text-sm ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Fondo blanco</p>
+                            <h4 className={`font-medium ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>{t('light', "Claro")}</h4>
+                            <p className={`text-sm ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('whiteBackground', "Fondo blanco")}</p>
                           </div>
                         </div>
                         <div 
@@ -220,8 +233,8 @@ const WidgetDemo: React.FC = () => {
                             <div className="h-3 w-full bg-blue-500 rounded-t-lg"></div>
                           </div>
                           <div className="ml-4">
-                            <h4 className={`font-medium ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>Oscuro</h4>
-                            <p className={`text-sm ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Fondo oscuro</p>
+                            <h4 className={`font-medium ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-700'}`}>{t('dark', "Oscuro")}</h4>
+                            <p className={`text-sm ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t('darkBackground', "Fondo oscuro")}</p>
                           </div>
                         </div>
                       </div>
@@ -233,7 +246,7 @@ const WidgetDemo: React.FC = () => {
                 {activeTab === 'content' && (
                   <div className="space-y-6 animate-fadeIn">
                     <div>
-                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Título</h3>
+                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('title', 'Título')}</h3>
                       <input
                         type="text"
                         className={`w-full p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${
@@ -248,7 +261,7 @@ const WidgetDemo: React.FC = () => {
                     </div>
                     
                     <div>
-                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Subtítulo</h3>
+                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('subtitle', 'Subtítulo')}</h3>
                       <input
                         type="text"
                         className={`w-full p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${
@@ -263,7 +276,7 @@ const WidgetDemo: React.FC = () => {
                     </div>
                     
                     <div>
-                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Mensaje Inicial</h3>
+                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('initialMessageLabel', 'Mensaje Inicial')}</h3>
                       <textarea
                         className={`w-full p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                           siteTheme === 'dark' 
@@ -283,9 +296,9 @@ const WidgetDemo: React.FC = () => {
                 {activeTab === 'code' && (
                   <div className="space-y-6 animate-fadeIn">
                     <div>
-                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>Código de Implementación</h3>
-                      <p className={`mb-4 ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                        Para integrar este widget en tu sitio web, copia y pega el siguiente código:
+                      <h3 className={`font-medium mb-2 ${siteTheme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{t('implementationCode', "Código de Implementación")}</h3>
+                      <p className={`text-sm mb-3 ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {t('integrationInstructions', "Para integrar este widget en tu sitio web, copia y pega el siguiente código:")}
                       </p>
                       
                       <div className="relative">
@@ -311,7 +324,7 @@ const WidgetDemo: React.FC = () => {
                                   <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
                                   <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 010 2h-2v-2z" />
                                 </svg>
-                                Copiar
+                                {t('copy', 'Copiar')}
                               </span>
                             )}
                           </button>
@@ -330,12 +343,12 @@ const WidgetDemo: React.FC = () => {
                       </div>
                       
                       <p className={`mt-6 ${siteTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                        <span className="block font-medium mb-2">Instrucciones de instalación:</span>
+                        <span className="block font-medium mb-2">{t('installationInstructions', 'Instrucciones de instalación')}:</span>
                         <ol className="list-decimal list-inside space-y-2">
-                          <li>Importa el componente ChatWidget en tu archivo React</li>
-                          <li>Añade el componente en tu layout o página donde desees mostrarlo</li>
-                          <li>Configura las propiedades según tus necesidades</li>
-                          <li>Asegúrate de que tu aplicación tiene acceso a la API de chat</li>
+                          <li>{t('importComponent', 'Importa el componente ChatWidget en tu archivo React')}</li>
+                          <li>{t('addComponent', 'Añade el componente en tu layout o página donde desees mostrarlo')}</li>
+                          <li>{t('configureProps', 'Configura las propiedades según tus necesidades')}</li>
+                          <li>{t('ensureAPIAccess', 'Asegúrate de que tu aplicación tiene acceso a la API de chat')}</li>
                         </ol>
                       </p>
                     </div>
@@ -347,14 +360,14 @@ const WidgetDemo: React.FC = () => {
           
           {/* Widget preview */}
           <div className="lg:col-span-5 order-1 lg:order-2 mb-8 lg:mb-0">
-            <div className={`${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6 h-[32rem] md:sticky md:top-20 overflow-hidden transition-colors duration-300 border ${siteTheme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className={`${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-lg p-6 h-[36rem] md:sticky md:top-20 overflow-hidden transition-colors duration-300 border ${siteTheme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className="flex flex-col h-full">
-                <h3 className="text-lg font-semibold mb-2">Vista Previa</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('preview', "Vista Previa")}</h3>
                 <div className="inline-flex items-center px-3 py-1 mb-3 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                   <svg className="mr-1.5 h-2 w-2 text-blue-400" fill="currentColor" viewBox="0 0 8 8">
                     <circle cx="4" cy="4" r="3" />
                   </svg>
-                  Viendo en tiempo real
+                  {t('viewingRealTime', "Viendo en tiempo real")}
                 </div>
                 <div className="w-full flex-1 relative bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                   {/* Barra de navegador simulada */}
@@ -368,10 +381,10 @@ const WidgetDemo: React.FC = () => {
                   </div>
                   
                   {/* Contenido de la web simulada */}
-                  <div className="relative h-[calc(100%-2rem)]">
+                  <div className="relative h-[calc(100%-2rem)] min-h-[20rem] overflow-auto">
                     {/* Posicionamos el widget según la configuración */}
                     <div className={`absolute ${widgetPosition === 'bottom-right' ? 'right-3 bottom-3' : 'left-3 bottom-3'}`}>
-                      <div className={`${widgetTheme === 'light' ? 'bg-white text-gray-800 border border-gray-200' : 'bg-gray-800 text-white border border-gray-700'} rounded-lg shadow-xl overflow-hidden`} style={{width: '250px', height: '350px'}}>
+                      <div className={`${widgetTheme === 'light' ? 'bg-white text-gray-800 border border-gray-200' : 'bg-gray-800 text-white border border-gray-700'} rounded-lg shadow-xl overflow-hidden`} style={{width: '250px', height: '320px'}}>
                         {/* Header del widget */}
                         <div className={`${widgetTheme === 'light' ? 'bg-blue-600' : 'bg-gray-900'} p-3 flex flex-col`}>
                           <div className="flex justify-between items-center">
@@ -398,7 +411,7 @@ const WidgetDemo: React.FC = () => {
                           {/* Input del widget (simulado) */}
                           <div className={`p-2 border-t ${widgetTheme === 'light' ? 'border-gray-200' : 'border-gray-700'}`}>
                             <div className={`flex rounded-full p-2 ${widgetTheme === 'light' ? 'bg-gray-100' : 'bg-gray-700'}`}>
-                              <input type="text" readOnly className={`flex-1 text-sm border-none bg-transparent ${widgetTheme === 'light' ? 'text-gray-800' : 'text-white'} focus:ring-0 focus:outline-none`} placeholder="Escribe un mensaje..." />
+                              <input type="text" readOnly className={`flex-1 text-sm border-none bg-transparent ${widgetTheme === 'light' ? 'text-gray-800' : 'text-white'} focus:ring-0 focus:outline-none`} placeholder={t('type', "Escribe un mensaje...")} />
                               <button className={`p-1 rounded-full ${widgetTheme === 'light' ? 'bg-blue-600' : 'bg-blue-600'} text-white`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
@@ -414,23 +427,23 @@ const WidgetDemo: React.FC = () => {
                 
                 {/* Configuración actual */}
                 <div className="mt-4">
-                  <h4 className={`font-medium text-sm mb-2 ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Configuración actual</h4>
+                  <h4 className={`font-medium text-sm mb-2 ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{t('currentConfig', "Configuración actual")}</h4>
                   <div className={`rounded-lg overflow-hidden border ${siteTheme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
                     <dl className="divide-y divide-gray-200 dark:divide-gray-700 text-sm">
                       <div className={`px-3 py-2 grid grid-cols-3 gap-4 ${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                        <dt className={`font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Posición</dt>
+                        <dt className={`font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>{t('position', "Posición")}</dt>
                         <dd className={`font-medium col-span-2 ${siteTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                          {widgetPosition === 'bottom-right' ? 'Inferior Derecha' : 'Inferior Izquierda'}
+                          {widgetPosition === 'bottom-right' ? t('bottomRight', "Inferior Derecha") : t('bottomLeft', "Inferior Izquierda")}
                         </dd>
                       </div>
                       <div className={`px-3 py-2 grid grid-cols-3 gap-4`}>
-                        <dt className={`font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Tema</dt>
+                        <dt className={`font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>{t('theme', "Tema")}</dt>
                         <dd className={`font-medium col-span-2 ${siteTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                          {widgetTheme === 'light' ? 'Claro' : 'Oscuro'}
+                          {widgetTheme === 'light' ? t('light', "Claro") : t('dark', "Oscuro")}
                         </dd>
                       </div>
                       <div className={`px-3 py-2 grid grid-cols-3 gap-4 ${siteTheme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                        <dt className={`font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>Título</dt>
+                        <dt className={`font-medium ${siteTheme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>{t('title', "Título")}</dt>
                         <dd className={`font-medium col-span-2 truncate ${siteTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                           {widgetTitle}
                         </dd>
@@ -446,7 +459,7 @@ const WidgetDemo: React.FC = () => {
       
       <footer className={`py-6 transition-colors duration-300 ${siteTheme === 'dark' ? 'bg-gray-800 text-gray-400' : 'bg-gray-800 text-gray-300'}`}>
         <div className="container mx-auto px-4 text-center">
-          <p>© 2025 Nowports. Todos los derechos reservados.</p>
+          <p>{t('copyright', '© 2025 Nowports. Todos los derechos reservados.')}</p>
         </div>
       </footer>
       
@@ -471,6 +484,14 @@ const WidgetDemo: React.FC = () => {
       `}</style>
     </div>
   );
+};
+
+export const getStaticProps: GetStaticProps = async ({ locale }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale || 'es', ['common'])),
+    },
+  };
 };
 
 export default WidgetDemo; 
