@@ -1,7 +1,14 @@
 import React from 'react';
-import { ChatMessage, DocumentAttachment, QuickReply } from '../types/chat';
+import { ChatMessage, DocumentAttachment, QuickReply, TrackingVisualization } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
 import QuickReplies from './QuickReplies';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for ShipmentTracker to avoid server-side rendering issues
+const ShipmentTracker = dynamic(() => import('./tracking/ShipmentTracker'), { 
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-blue-100 rounded-lg h-48 w-full"></div>
+});
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -175,6 +182,13 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
               >
                 {message.content}
               </ReactMarkdown>
+            </div>
+          )}
+          
+          {/* Tracking visualization */}
+          {message.trackingVisualization && (
+            <div className="mt-4 animate-fadeIn">
+              <ShipmentTracker data={message.trackingVisualization} />
             </div>
           )}
           

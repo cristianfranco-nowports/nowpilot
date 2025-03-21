@@ -18,6 +18,41 @@ export interface DocumentAttachment {
   content?: string; // Para simulación, en un entorno real no se incluiría el contenido en el objeto
 }
 
+export interface TrackingMilestone {
+  name: string;
+  date: string;
+  status: 'completed' | 'inProgress' | 'upcoming';
+  location?: {
+    lat: number;
+    lng: number;
+    name: string;
+  };
+}
+
+export interface TrackingVisualization {
+  shipmentId: string;
+  origin: {
+    lat: number;
+    lng: number;
+    name: string;
+  };
+  destination: {
+    lat: number;
+    lng: number;
+    name: string;
+  };
+  currentLocation: {
+    lat: number;
+    lng: number;
+    name: string;
+  };
+  estimatedArrival: string;
+  milestones: TrackingMilestone[];
+  carrier: string;
+  vesselName?: string;
+  containerNumbers?: string[];
+}
+
 export interface ChatMessage {
   id: string;
   role: MessageRole;
@@ -27,6 +62,7 @@ export interface ChatMessage {
   quickReplies?: QuickReply[];
   quickRepliesVariant?: 'default' | 'feature';
   quickRepliesColumns?: 1 | 2 | 3;
+  trackingVisualization?: TrackingVisualization;
 }
 
 export interface ChatState {

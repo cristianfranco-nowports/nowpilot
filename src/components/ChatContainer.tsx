@@ -3,8 +3,9 @@ import { useTranslation } from 'next-i18next';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import QuickReplies from './QuickReplies';
-import { ChatMessage, ChatState, DocumentAttachment } from '../types/chat';
+import { ChatMessage, ChatState, DocumentAttachment, TrackingVisualization } from '../types/chat';
 import { v4 as uuidv4 } from 'uuid';
+import ShipmentTracker from './tracking/ShipmentTracker';
 
 interface ChatContainerProps {
   theme?: 'light' | 'dark';
@@ -864,6 +865,80 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
 
   // Manejar la selección de una respuesta rápida
   const handleQuickReplySelect = (value: string) => {
+    // Verificar si se trata de hacer seguimiento a un embarque
+    if (value.toLowerCase().includes('hacer seguimiento') || value.toLowerCase().includes('seguimiento a mi embarque')) {
+      // Crear un mensaje del usuario
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Simular respuesta del asistente después de un breve retraso
+      setTimeout(() => {
+        const trackingData: TrackingVisualization = {
+          shipmentId: 'ECR2503586',
+          origin: { 
+            name: 'Manzanillo, México',
+            lat: 19.0495,
+            lng: -104.3140
+          },
+          destination: { 
+            name: 'Long Beach, EE.UU.',
+            lat: 33.7701,
+            lng: -118.1937
+          },
+          currentLocation: { 
+            name: 'Océano Pacífico',
+            lat: 24.5000,
+            lng: -112.0000
+          },
+          estimatedArrival: '04/04/2025',
+          milestones: [
+            { name: 'Recogida', date: '15/11/2023', status: 'completed' },
+            { name: 'Llegada a puerto de origen', date: '18/11/2023', status: 'completed' },
+            { name: 'Carga en buque', date: '20/11/2023', status: 'completed' },
+            { name: 'En tránsito marítimo', date: 'Actual', status: 'inProgress' },
+            { name: 'Llegada a puerto destino', date: '04/04/2025', status: 'upcoming' },
+            { name: 'Despacho aduanal', date: 'Pendiente', status: 'upcoming' },
+            { name: 'Entrega final', date: 'Pendiente', status: 'upcoming' }
+          ],
+          carrier: 'Maersk Line',
+          vesselName: 'Maersk Semarang',
+          containerNumbers: ['MSKU7627321']
+        };
+
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: "Para dar seguimiento a tu embarque con Nowports, te ofrecemos las siguientes opciones:",
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          trackingVisualization: trackingData,
+          quickReplies: [
+            { label: 'Actualizar ubicación', value: 'Actualizar ubicación de mi embarque', icon: '🔄' },
+            { label: 'Ver documentos', value: 'Ver documentos del envío ECR2503586', icon: '📄' },
+            { label: 'Contactar ejecutivo', value: 'Contactar con mi agente asignado', icon: '👨‍💼' }
+          ]
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 1000);
+      
+      return;
+    }
+    
     // Verificar si es una solicitud para contactar con el agente asignado
     if (value.toLowerCase().includes('contactar con mi agente') || value.toLowerCase().includes('contactar agente')) {
       // Crear un mensaje del usuario
@@ -888,67 +963,6 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
           content: "Entendido. Para contactar a tu agente asignado, por favor proporciona tu número de cuenta Nowports o el nombre de tu empresa. Con esta información, podré localizar a tu agente y facilitar la comunicación de inmediato.",
           role: 'assistant',
           timestamp: Date.now().toString(),
-        };
-
-        setChatState(prev => ({
-          ...prev,
-          messages: [...prev.messages, assistantMessage],
-          isLoading: false
-        }));
-      }, 800);
-      
-      return;
-    }
-    
-    // Verificar si ha proporcionado nombre de empresa después de solicitar contactar con agente
-    const empresaRegex = /(Olivera S\.C|Transportes Unidos|Global Logistics)/i;
-    const empresaMatch = value.match(empresaRegex);
-    
-    if (empresaMatch && 
-        chatState.messages.some(m => m.content.toLowerCase().includes("contactar a tu agente") || 
-                                    m.content.toLowerCase().includes("proporciona tu número"))) {
-      // Crear un mensaje del usuario
-      const userMessage: ChatMessage = {
-        id: uuidv4(),
-        content: value,
-        role: 'user',
-        timestamp: Date.now().toString(),
-      };
-
-      // Actualizar el chat con el mensaje del usuario
-      setChatState(prev => ({
-        ...prev,
-        messages: [...prev.messages, userMessage],
-        isLoading: true
-      }));
-
-      // Información del agente basada en la empresa
-      const empresa = empresaMatch[1];
-      const ejecutivo = empresa === "Olivera S.C" ? "María González" : 
-                        empresa === "Transportes Unidos" ? "Carlos Ramírez" : "Ana López";
-      const telefono = empresa === "Olivera S.C" ? "+52 55 1234 5678" : 
-                      empresa === "Transportes Unidos" ? "+52 55 8765 4321" : "+52 55 4567 8901";
-      const email = empresa === "Olivera S.C" ? "maria.gonzalez@nowports.com" : 
-                    empresa === "Transportes Unidos" ? "carlos.ramirez@nowports.com" : "ana.lopez@nowports.com";
-
-      // Simular respuesta del asistente después de un breve retraso
-      setTimeout(() => {
-        const assistantMessage: ChatMessage = {
-          id: uuidv4(),
-          content: `🧑‍💼 **Información de contacto del ejecutivo para ${empresa}**\n\n` +
-                   `**Ejecutivo asignado:** ${ejecutivo}\n` +
-                   `**Teléfono directo:** ${telefono}\n` +
-                   `**Correo electrónico:** ${email}\n` +
-                   `**Horario de atención:** Lunes a Viernes de 9:00 a 18:00 hrs\n\n` +
-                   `Puedes contactar a ${ejecutivo} a través de cualquiera de los siguientes medios:`,
-          role: 'assistant',
-          timestamp: Date.now().toString(),
-          quickReplies: [
-            { label: 'Llamar ahora', value: `Llamar a ${ejecutivo} al ${telefono}`, icon: '📞' },
-            { label: 'Enviar WhatsApp', value: `Enviar WhatsApp a ${ejecutivo}`, icon: '💬' },
-            { label: 'Enviar correo', value: `Enviar correo a ${email}`, icon: '📧' },
-            { label: 'Agendar llamada', value: 'Agendar una llamada para más tarde', icon: '📅' }
-          ]
         };
 
         setChatState(prev => ({
