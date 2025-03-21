@@ -6,6 +6,8 @@
   "routeInfoDesc": "Tiempo de tránsito, salidas y puertos disponibles",
   "quotes": "Cotizaciones preliminares",
   "quotesDesc": "Obtenga una cotización preliminar para su carga",
+  "routeInfoAndQuotes": "Información y cotizaciones",
+  "routeInfoAndQuotesDesc": "Información sobre rutas, servicios y cotizaciones preliminares",
   "tracking": "Seguimiento de embarques",
   "trackingDesc": "Status actualizado y ubicación de su carga",
   "documents": "Requisitos documentales",

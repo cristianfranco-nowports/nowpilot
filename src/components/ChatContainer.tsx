@@ -112,16 +112,10 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
       timestamp: new Date().toISOString(),
       quickReplies: [
         { 
-          label: t('routeInfo'),
+          label: t('routeInfoAndQuotes'),
           value: t('requestRouteInfo', 'Necesito información sobre rutas y servicios'),
           icon: '🚢',
-          description: t('routeInfoDesc', 'Tiempo de tránsito, salidas y puertos disponibles')
-        },
-        { 
-          label: t('quotes'), 
-          value: t('requestQuote', 'Quiero solicitar una cotización para transporte internacional'), 
-          icon: '💰',
-          description: t('quotesDesc', 'Obtenga una cotización preliminar para su carga')
+          description: t('routeInfoAndQuotesDesc')
         },
         { 
           label: t('tracking'), 
