@@ -26,6 +26,15 @@ export interface CustomerAgentData {
   avatarUrl?: string;
 }
 
+export interface WhatsAppAlertData {
+  title: string;
+  phone: string;
+  message: string;
+  previewImage?: string;
+  notificationType: 'status' | 'arrival' | 'delay' | 'documents';
+  shipmentId: string;
+}
+
 export interface TrackingMilestone {
   name: string;
   date: string;
@@ -72,6 +81,7 @@ export interface ChatMessage {
   quickRepliesColumns?: 1 | 2 | 3;
   trackingVisualization?: TrackingVisualization;
   customerAgentData?: CustomerAgentData;
+  whatsAppAlertData?: WhatsAppAlertData;
 }
 
 export interface ChatState {

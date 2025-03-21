@@ -1,14 +1,8 @@
 import React from 'react';
-
-interface QuickReplyOption {
-  label: string;
-  value: string;
-  icon?: string;
-  description?: string;
-}
+import { QuickReply } from '../types/chat';
 
 interface QuickRepliesProps {
-  options: QuickReplyOption[];
+  options: QuickReply[];
   onSelect: (value: string) => void;
   theme?: 'light' | 'dark';
   variant?: 'default' | 'feature';
@@ -25,65 +19,70 @@ const QuickReplies: React.FC<QuickRepliesProps> = ({
   if (!options || options.length === 0) {
     return null;
   }
-
-  const themeClasses = {
-    container: {
-      light: 'bg-white',
-      dark: 'bg-gray-800'
-    },
-    button: {
-      light: 'bg-gray-100 hover:bg-gray-200 text-gray-800 border-gray-200',
-      dark: 'bg-gray-700 hover:bg-gray-600 text-white border-gray-600'
-    },
-    featureCard: {
-      light: 'bg-white hover:bg-blue-50 text-gray-800 border-gray-200 shadow-sm hover:border-blue-300',
-      dark: 'bg-gray-700 hover:bg-gray-600 text-white border-gray-600 hover:border-blue-400'
+  
+  const getColumnClass = () => {
+    switch (columns) {
+      case 1:
+        return '';
+      case 2:
+        return 'grid grid-cols-1 sm:grid-cols-2 gap-2';
+      case 3:
+        return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2';
+      default:
+        return '';
     }
   };
-
-  const getGridClasses = () => {
-    switch(columns) {
-      case 1: return 'grid-cols-1';
-      case 2: return 'grid-cols-1 md:grid-cols-2';
-      case 3: return 'grid-cols-1 md:grid-cols-3';
-      default: return 'grid-cols-1';
-    }
-  };
-
+  
+  // Para el variante 'feature' usamos un grid especial
   if (variant === 'feature') {
     return (
-      <div className={`my-4 grid ${getGridClasses()} gap-3 ${themeClasses.container[theme]}`}>
+      <div className={`${getColumnClass()} relative z-20`}>
         {options.map((option, index) => (
           <button
             key={index}
+            className={`mb-2 ${columns > 1 ? '' : 'mr-2'} px-4 py-3 rounded-lg transition-colors duration-200 group ${
+              theme === 'light'
+                ? 'bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-200 shadow-sm'
+                : 'bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-gray-600'
+            }`}
             onClick={() => onSelect(option.value)}
-            className={`p-4 rounded-lg text-left transition-all border ${themeClasses.featureCard[theme]} flex flex-col hover:scale-105`}
           >
-            {option.icon && (
-              <span className="text-xl mb-2 inline-block">{option.icon}</span>
-            )}
-            <span className="font-medium text-base mb-1">{option.label}</span>
-            {option.description && (
-              <span className={`text-sm ${theme === 'light' ? 'text-gray-600' : 'text-gray-300'}`}>
-                {option.description}
-              </span>
-            )}
+            <div className="flex items-center">
+              {option.icon && (
+                <span className="text-xl mr-3">{option.icon}</span>
+              )}
+              <div className="text-left">
+                <div className={`font-medium ${theme === 'light' ? 'text-gray-800' : 'text-gray-100'}`}>{option.label}</div>
+                {option.description && (
+                  <div className={`text-xs mt-1 ${theme === 'light' ? 'text-gray-500' : 'text-gray-400'}`}>{option.description}</div>
+                )}
+              </div>
+            </div>
           </button>
         ))}
       </div>
     );
   }
 
+  // Variant default (botones de texto simple)
   return (
-    <div className={`my-3 flex flex-wrap gap-2 ${themeClasses.container[theme]}`}>
+    <div className={`flex flex-wrap relative z-20`}>
       {options.map((option, index) => (
         <button
           key={index}
+          className={`mb-2 mr-2 px-3 py-2 rounded-lg transition-colors duration-200 ${
+            theme === 'light'
+              ? 'bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200'
+              : 'bg-gray-700 hover:bg-gray-600 text-gray-100 border border-gray-600'
+          }`}
           onClick={() => onSelect(option.value)}
-          className={`px-3 py-2 rounded-full text-sm font-medium transition-colors border ${themeClasses.button[theme]} flex items-center`}
         >
-          {option.icon && <span className="mr-1">{option.icon}</span>}
-          {option.label}
+          <div className="flex items-center">
+            {option.icon && (
+              <span className="mr-2">{option.icon}</span>
+            )}
+            <span>{option.label}</span>
+          </div>
         </button>
       ))}
     </div>

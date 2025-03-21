@@ -1116,6 +1116,7 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
           timestamp: Date.now().toString(),
           trackingVisualization: trackingData,
           quickReplies: [
+            { label: 'Activar alertas', value: `Activar alertas para ${trackingCode}`, icon: '🔔' },
             { label: 'Actualizar ubicación', value: `Actualizar ubicación de mi embarque ${trackingCode}`, icon: '🔄' },
             { label: 'Ver documentos', value: `Ver documentos del envío ${trackingCode}`, icon: '📄' },
             { label: 'Contactar ejecutivo', value: 'Contactar con mi agente asignado', icon: '👨‍💼' }
@@ -1128,6 +1129,62 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
           isLoading: false
         }));
       }, 1000);
+      
+      return;
+    }
+    
+    // Verificar si es una solicitud para activar notificaciones
+    const activateAlertsRegex = /activar (?:alertas|notificaciones) para ([A-Z]{3}\d{7})/i;
+    const activateAlertsMatch = value.match(activateAlertsRegex);
+    
+    if (activateAlertsMatch && activateAlertsMatch[1]) {
+      const trackingCode = activateAlertsMatch[1].toUpperCase();
+      
+      // Crear un mensaje del usuario
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Simular respuesta del asistente después de un breve retraso
+      setTimeout(() => {
+        // Generar un número de teléfono de ejemplo
+        const phoneNumber = '52123456789';
+        
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: `✅ **Alertas activadas para el envío ${trackingCode}**\n\nHe configurado notificaciones por WhatsApp para este embarque. Recibirás actualizaciones cuando haya cambios en el estado de tu envío.`,
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          whatsAppAlertData: {
+            title: 'Alertas por WhatsApp',
+            phone: phoneNumber,
+            message: `Tu embarque ${trackingCode} ha llegado al puerto de Long Beach. Se iniciará el proceso de despacho aduanal en las próximas 24 horas.`,
+            notificationType: 'status',
+            shipmentId: trackingCode
+          },
+          quickReplies: [
+            { label: 'Ver detalles del envío', value: `Ver detalles del envío ${trackingCode}`, icon: '📦' },
+            { label: 'Configurar contactos', value: 'Configurar contactos adicionales', icon: '👥' },
+            { label: 'Regresar al menú', value: 'Mostrar menú principal', icon: '🏠' }
+          ]
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 800);
       
       return;
     }
@@ -1339,7 +1396,7 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
           role: 'assistant',
           timestamp: Date.now().toString(),
           quickReplies: [
-            { label: 'Activar notificaciones', value: `Activar notificaciones para ${trackingCode}`, icon: '🔔' },
+            { label: 'Activar notificaciones', value: `Activar alertas para ${trackingCode}`, icon: '🔔' },
             { label: 'Ver documentos', value: `Ver documentos del envío ${trackingCode}`, icon: '📄' },
             { label: 'Contactar agente', value: 'Contactar con mi agente asignado', icon: '👨‍💼' }
           ]

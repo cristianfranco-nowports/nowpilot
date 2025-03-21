@@ -1,5 +1,5 @@
-import React from 'react';
-import { ChatMessage, DocumentAttachment, QuickReply, TrackingVisualization, CustomerAgentData } from '../types/chat';
+import React, { useState } from 'react';
+import { ChatMessage, DocumentAttachment, QuickReply, TrackingVisualization, CustomerAgentData, WhatsAppAlertData } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
 import QuickReplies from './QuickReplies';
 import dynamic from 'next/dynamic';
@@ -8,6 +8,12 @@ import dynamic from 'next/dynamic';
 const ShipmentTracker = dynamic(() => import('./tracking/ShipmentTracker'), { 
   ssr: false,
   loading: () => <div className="animate-pulse bg-blue-100 rounded-lg h-48 w-full"></div>
+});
+
+// Dynamic import for WhatsAppAlertModal
+const WhatsAppAlertModal = dynamic(() => import('./WhatsAppAlertModal'), {
+  ssr: false,
+  loading: () => <div className="animate-pulse bg-green-100 rounded-lg h-48 w-full"></div>
 });
 
 interface ChatBubbleProps {
@@ -154,6 +160,7 @@ const CustomerAgent: React.FC<{ data: CustomerAgentData; theme: 'light' | 'dark'
 };
 
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQuickReplySelect }) => {
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const isUser = message.role === 'user';
   
   // Clean any quickReplies format from the message content
@@ -201,102 +208,154 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
   const containerStyles = isUser
     ? `flex justify-end mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`
     : `flex justify-start mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`;
-
-  // Define bubble styles based on sender and theme
-  const bubbleStyles = isUser
-    ? `max-w-[80%] rounded-2xl rounded-tr-sm px-4 py-2 ${themeStyles.user[theme]} shadow-md hover:shadow-lg transition-shadow duration-300`
-    : `max-w-[80%] rounded-2xl rounded-tl-sm px-4 py-2 ${themeStyles.assistant[theme]} shadow-md hover:shadow-lg transition-shadow duration-300`;
-
+  
+  // Get the WhatsApp Alert data if present
+  const hasWhatsAppAlert = message.role === 'assistant' && message.whatsAppAlertData;
+  
+  // Check for tracking visualization
+  const hasTracking = message.role === 'assistant' && message.trackingVisualization;
+  
+  // Check for customer agent info
+  const hasCustomerAgent = message.role === 'assistant' && message.customerAgentData;
+  
+  // Check for document attachments
   const hasAttachments = message.attachments && message.attachments.length > 0;
-  const hasQuickReplies = message.quickReplies && message.quickReplies.length > 0;
-  const hasCustomerAgent = message.customerAgentData !== undefined;
+  
+  // Check for quick replies
+  const hasQuickReplies = message.role === 'assistant' && message.quickReplies && message.quickReplies.length > 0;
 
-  return (
-    <div className={containerStyles}>
-      <div className="flex flex-col">
-        {/* Message sender indicator */}
-        <div className={`text-xs mb-1 ${isUser ? 'text-right' : 'text-left'} ${themeStyles.time[theme]}`}>
-          {isUser ? 'Tú' : 'Asistente'}
-        </div>
-        
-        {/* Message bubble */}
-        <div className={bubbleStyles}>
-          {isUser ? (
-            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-          ) : (
-            <div className="markdown text-sm">
-              <ReactMarkdown 
+  // Effect to show WhatsApp Modal automatically when the message with WhatsApp data arrives
+  React.useEffect(() => {
+    if (hasWhatsAppAlert) {
+      setShowWhatsAppModal(true);
+    }
+  }, [hasWhatsAppAlert]);
+  
+  // WhatsApp Alert Modal
+  if (hasWhatsAppAlert && showWhatsAppModal) {
+    return (
+      <>
+        <div className={containerStyles}>
+          {/* Message bubble */}
+          <div className={`px-4 py-3 rounded-lg max-w-[80%] shadow-sm ${isUser ? themeStyles.user[theme] : themeStyles.assistant[theme]}`}>
+            {/* Message content */}
+            <div className="prose prose-sm" style={{ maxWidth: '100%' }}>
+              <ReactMarkdown
                 components={{
-                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props as React.HTMLAttributes<HTMLParagraphElement>} />,
-                  ul: ({ node, ...props }) => <ul className="mb-2 list-disc pl-4" {...props as React.HTMLAttributes<HTMLUListElement>} />,
-                  ol: ({ node, ...props }) => <ol className="mb-2 list-decimal pl-4" {...props as React.OlHTMLAttributes<HTMLOListElement>} />,
-                  li: ({ node, ...props }) => <li className="mb-1" {...props as React.LiHTMLAttributes<HTMLLIElement>} />,
-                  a: ({ node, ...props }) => (
-                    <a 
-                      className={`underline ${theme === 'dark' ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600 hover:text-blue-800'} transition-colors duration-200`} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      {...props as React.AnchorHTMLAttributes<HTMLAnchorElement>} 
-                    />
-                  ),
-                  strong: ({ node, ...props }) => <strong className="font-bold" {...props as React.HTMLAttributes<HTMLElement>} />,
-                  h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2" {...props as React.HTMLAttributes<HTMLHeadingElement>} />,
-                  h2: ({ node, ...props }) => <h2 className="text-lg font-bold mb-2" {...props as React.HTMLAttributes<HTMLHeadingElement>} />,
-                  h3: ({ node, ...props }) => <h3 className="text-md font-bold mb-2" {...props as React.HTMLAttributes<HTMLHeadingElement>} />,
-                  blockquote: ({ node, ...props }) => (
-                    <blockquote 
-                      className={`border-l-4 ${theme === 'dark' ? 'border-gray-600 bg-gray-700/50' : 'border-gray-300 bg-gray-50'} pl-4 py-1 my-2 animate-fadeLeft`} 
-                      {...props as React.BlockquoteHTMLAttributes<HTMLQuoteElement>} 
-                    />
-                  ),
-                  code: ({ node, className, ...props }) => {
-                    const match = /language-(\w+)/.exec(className || '');
-                    const isInline = !className || !match;
-                    
-                    return isInline 
-                      ? <code className={`px-1 py-0.5 rounded ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'} transition-colors duration-200`} {...props as React.HTMLAttributes<HTMLElement>} />
-                      : <code className={`block p-2 my-2 rounded ${theme === 'dark' ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} overflow-x-auto ${className} transition-colors duration-200`} {...props as React.HTMLAttributes<HTMLElement>} />
-                  },
-                  pre: ({ node, ...props }) => <pre className="my-2 animate-fadeIn" {...props as React.HTMLAttributes<HTMLPreElement>} />,
+                  p: ({ node, ...props }) => <p className="mb-1 last:mb-0" {...props} />,
+                  a: ({ node, ...props }) => <a className={`underline ${isUser ? 'text-blue-100' : theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} {...props} target="_blank" rel="noopener noreferrer" />,
+                  ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-1 my-2" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-1 my-2" {...props} />,
+                  li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                  h3: ({ node, ...props }) => <h3 className="text-base font-semibold my-2" {...props} />,
+                  h4: ({ node, ...props }) => <h4 className="text-sm font-semibold my-1" {...props} />,
+                  code: ({ node, ...props }) => <code className={`px-1 py-0.5 rounded ${isUser ? 'bg-blue-600 text-blue-50' : theme === 'dark' ? 'bg-gray-600 text-gray-100' : 'bg-gray-200 text-gray-800'}`} {...props} />,
+                  pre: ({ node, ...props }) => <pre className={`p-2 rounded overflow-auto my-2 ${isUser ? 'bg-blue-600 text-blue-50' : theme === 'dark' ? 'bg-gray-600 text-gray-100' : 'bg-gray-200 text-gray-800'}`} {...props} />
                 }}
               >
-                {cleanedContent}
+                {cleanedContent as string}
               </ReactMarkdown>
             </div>
-          )}
+            
+            {/* Tracking visualization if available */}
+            {hasTracking && message.trackingVisualization && (
+              <div className="mt-3 animate-fadeIn">
+                <ShipmentTracker data={message.trackingVisualization} theme={theme} />
+              </div>
+            )}
+            
+            {/* Customer agent contact info if available */}
+            {hasCustomerAgent && message.customerAgentData && (
+              <CustomerAgent data={message.customerAgentData} theme={theme} />
+            )}
+            
+            {/* Document attachments if available */}
+            {hasAttachments && message.attachments && (
+              <div className={`mt-3 ${isUser ? 'border-t border-blue-500/30' : 'border-t border-gray-300/30'} pt-2 animate-fadeIn`}>
+                <p className={`text-xs mb-2 ${isUser ? 'text-blue-200' : theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Documentos adjuntos:
+                </p>
+                {message.attachments.map((doc, idx) => (
+                  <div key={doc.id} className="animate-fadeIn" style={{ animationDelay: `${idx * 0.1}s` }}>
+                    <DocumentPreview document={doc} theme={theme} />
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Quick replies are hidden when WhatsApp modal is shown */}
+          </div>
           
-          {/* Customer Agent Information */}
-          {hasCustomerAgent && message.customerAgentData && (
-            <CustomerAgent data={message.customerAgentData} theme={theme} />
-          )}
-          
-          {/* Tracking visualization */}
-          {message.trackingVisualization && (
-            <div className="mt-4 animate-fadeIn">
-              <ShipmentTracker data={message.trackingVisualization} />
-            </div>
-          )}
-          
-          {/* Documentos adjuntos */}
-          {hasAttachments && (
-            <div className={`mt-3 ${isUser ? 'border-t border-blue-500/30' : 'border-t border-gray-300/30'} pt-2 animate-fadeIn`}>
-              <p className={`text-xs mb-2 ${isUser ? 'text-blue-200' : theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Documentos adjuntos:
-              </p>
-              {message.attachments?.map((doc, idx) => (
-                <div key={doc.id} className="animate-fadeIn" style={{ animationDelay: `${idx * 0.1}s` }}>
-                  <DocumentPreview document={doc} theme={theme} />
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Timestamp */}
+          <div className={`text-xs ml-2 self-end ${themeStyles.time[theme]}`}>
+            {formattedTime}
+          </div>
         </div>
         
-        {/* Quick Replies */}
-        {hasQuickReplies && onQuickReplySelect && (
-          <div className="mt-2 w-full animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+        {/* WhatsApp Alert Modal */}
+        <WhatsAppAlertModal 
+          data={message.whatsAppAlertData!} 
+          theme={theme} 
+          onClose={() => setShowWhatsAppModal(false)} 
+        />
+      </>
+    );
+  }
+  
+  return (
+    <div className={containerStyles}>
+      {/* Message bubble */}
+      <div className={`px-4 py-3 rounded-lg max-w-[80%] shadow-sm ${isUser ? themeStyles.user[theme] : themeStyles.assistant[theme]}`}>
+        {/* Message content */}
+        <div className="prose prose-sm" style={{ maxWidth: '100%' }}>
+          <ReactMarkdown
+            components={{
+              p: ({ node, ...props }) => <p className="mb-1 last:mb-0" {...props} />,
+              a: ({ node, ...props }) => <a className={`underline ${isUser ? 'text-blue-100' : theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} {...props} target="_blank" rel="noopener noreferrer" />,
+              ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-1 my-2" {...props} />,
+              ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-1 my-2" {...props} />,
+              li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+              h3: ({ node, ...props }) => <h3 className="text-base font-semibold my-2" {...props} />,
+              h4: ({ node, ...props }) => <h4 className="text-sm font-semibold my-1" {...props} />,
+              code: ({ node, ...props }) => <code className={`px-1 py-0.5 rounded ${isUser ? 'bg-blue-600 text-blue-50' : theme === 'dark' ? 'bg-gray-600 text-gray-100' : 'bg-gray-200 text-gray-800'}`} {...props} />,
+              pre: ({ node, ...props }) => <pre className={`p-2 rounded overflow-auto my-2 ${isUser ? 'bg-blue-600 text-blue-50' : theme === 'dark' ? 'bg-gray-600 text-gray-100' : 'bg-gray-200 text-gray-800'}`} {...props} />
+            }}
+          >
+            {cleanedContent as string}
+          </ReactMarkdown>
+        </div>
+        
+        {/* Tracking visualization if available */}
+        {hasTracking && message.trackingVisualization && (
+          <div className="mt-3 animate-fadeIn">
+            <ShipmentTracker data={message.trackingVisualization} theme={theme} />
+          </div>
+        )}
+        
+        {/* Customer agent contact info if available */}
+        {hasCustomerAgent && message.customerAgentData && (
+          <CustomerAgent data={message.customerAgentData} theme={theme} />
+        )}
+        
+        {/* Document attachments if available */}
+        {hasAttachments && message.attachments && (
+          <div className={`mt-3 ${isUser ? 'border-t border-blue-500/30' : 'border-t border-gray-300/30'} pt-2 animate-fadeIn`}>
+            <p className={`text-xs mb-2 ${isUser ? 'text-blue-200' : theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              Documentos adjuntos:
+            </p>
+            {message.attachments.map((doc, idx) => (
+              <div key={doc.id} className="animate-fadeIn" style={{ animationDelay: `${idx * 0.1}s` }}>
+                <DocumentPreview document={doc} theme={theme} />
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Quick replies if available */}
+        {hasQuickReplies && message.quickReplies && onQuickReplySelect && !hasWhatsAppAlert && (
+          <div className="mt-2 w-full animate-fadeIn z-10" style={{ animationDelay: '0.2s' }}>
             <QuickReplies 
-              options={message.quickReplies || []} 
+              options={message.quickReplies} 
               onSelect={onQuickReplySelect} 
               theme={theme}
               variant={message.quickRepliesVariant || 'default'}
@@ -305,11 +364,35 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
           </div>
         )}
         
-        {/* Timestamp */}
-        <div className={`text-xs mt-1 ${isUser ? 'text-right' : 'text-left'} ${themeStyles.time[theme]}`}>
-          {formattedTime}
-        </div>
+        {/* WhatsApp Alert Button */}
+        {hasWhatsAppAlert && !showWhatsAppModal && (
+          <div className="mt-2 animate-fadeIn">
+            <button 
+              className={`w-full py-2 px-4 rounded-md flex items-center justify-center bg-green-500 hover:bg-green-600 text-white transition-colors`}
+              onClick={() => setShowWhatsAppModal(true)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              Ver alertas de WhatsApp
+            </button>
+          </div>
+        )}
       </div>
+      
+      {/* Timestamp */}
+      <div className={`text-xs ml-2 self-end ${themeStyles.time[theme]}`}>
+        {formattedTime}
+      </div>
+      
+      {/* WhatsApp Alert Modal */}
+      {hasWhatsAppAlert && showWhatsAppModal && (
+        <WhatsAppAlertModal 
+          data={message.whatsAppAlertData!} 
+          theme={theme} 
+          onClose={() => setShowWhatsAppModal(false)} 
+        />
+      )}
     </div>
   );
 };
