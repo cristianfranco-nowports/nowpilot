@@ -1,54 +1,54 @@
 # Nowports Assistant
 
-## Descripción del Proyecto
+## Project Description
 
-Nowports Assistant es una solución interactiva de asistencia al cliente que utiliza tecnología de chat inteligente para facilitar la comunicación entre los usuarios de servicios logísticos y la plataforma Nowports. Este asistente permite a los clientes realizar consultas sobre envíos, obtener actualizaciones en tiempo real, gestionar documentación y conectarse con agentes humanos cuando sea necesario.
+Nowports Assistant is an interactive customer support solution that uses intelligent chat technology to facilitate communication between logistics service users and the Nowports platform. This assistant allows customers to make inquiries about shipments, get real-time updates, manage documentation, and connect with human agents when necessary.
 
-## Funcionalidades Principales
+## Main Features
 
-- **Chat Interactivo**: Interfaz conversacional intuitiva con soporte para markdown.
-- **Seguimiento de Envíos**: Visualización gráfica del estado y ubicación de los envíos.
-- **Notificaciones por WhatsApp**: Configuración de alertas para recibir actualizaciones en tiempo real.
-- **Respuestas Rápidas**: Opciones predefinidas para facilitar la interacción del usuario.
-- **Multilingüe**: Soporte para varios idiomas (español e inglés inicialmente).
-- **Modo Oscuro/Claro**: Interfaz adaptable a las preferencias del usuario.
-- **Integración con Ejecutivos**: Conexión directa con agentes humanos cuando se requiere atención personalizada.
+- **Interactive Chat**: Intuitive conversational interface with markdown support.
+- **Shipment Tracking**: Graphical visualization of shipment status and location.
+- **WhatsApp Notifications**: Configuration of alerts to receive real-time updates.
+- **Quick Replies**: Predefined options to facilitate user interaction.
+- **Multilingual**: Support for multiple languages (initially Spanish and English).
+- **Dark/Light Mode**: Interface adaptable to user preferences.
+- **Executive Integration**: Direct connection with human agents when personalized attention is required.
 
-## Tipos de Datos y Modelado
+## Data Types and Modeling
 
-La aplicación utiliza una estructura de datos eficiente y escalable:
+The application uses an efficient and scalable data structure:
 
-### Mensajes y Chat
-- `ChatMessage`: Estructura principal para mensajes que incluye:
-  - Contenido textual (con soporte Markdown)
-  - Archivos adjuntos (documentos, imágenes)
-  - Respuestas rápidas
-  - Visualizaciones de seguimiento
-  - Datos de agentes/ejecutivos
-  - Información para alertas WhatsApp
+### Messages and Chat
+- `ChatMessage`: Main structure for messages that includes:
+  - Text content (with Markdown support)
+  - Attachments (documents, images)
+  - Quick replies
+  - Tracking visualizations
+  - Agent/executive data
+  - WhatsApp alert information
 
-### Seguimiento de Envíos
-- `TrackingVisualization`: Representación visual del estado del envío:
-  - Puntos de origen y destino (coordenadas y nombres)
-  - Ubicación actual
-  - Hitos del viaje con estados (completado/en progreso/pendiente)
-  - Información del transportista y contenedores
-  - Fechas estimadas de llegada
+### Shipment Tracking
+- `TrackingVisualization`: Visual representation of shipment status:
+  - Origin and destination points (coordinates and names)
+  - Current location
+  - Journey milestones with statuses (completed/in progress/pending)
+  - Carrier and container information
+  - Estimated arrival dates
 
-### Notificaciones
-- `WhatsAppAlertData`: Configuración para notificaciones móviles:
-  - Número de teléfono y mensaje personalizado
-  - Tipo de notificación (estado, llegada, retraso, documentos)
-  - ID de envío relacionado
+### Notifications
+- `WhatsAppAlertData`: Configuration for mobile notifications:
+  - Phone number and personalized message
+  - Notification type (status, arrival, delay, documents)
+  - Related shipment ID
 
-### Interacción Asistida
-- `QuickReply`: Opciones interactivas para respuesta rápida
-- `CustomerAgentData`: Información del ejecutivo asignado 
-- `DocumentAttachment`: Estructura para documentos adjuntos
+### Assisted Interaction
+- `QuickReply`: Interactive options for quick response
+- `CustomerAgentData`: Assigned executive information
+- `DocumentAttachment`: Structure for attached documents
 
-## Capturas de Pantalla / Interfaces
+## Screenshots / Interfaces
 
-### Vista Principal
+### Main View
 ```
 +----------------------------------+
 |         Nowports Assistant       |
@@ -69,7 +69,7 @@ La aplicación utiliza una estructura de datos eficiente y escalable:
 +----------------------------------+
 ```
 
-### Seguimiento de Envíos
+### Shipment Tracking
 ```
 +----------------------------------+
 |      Shipment #MSKU7627321      |
@@ -80,92 +80,92 @@ La aplicación utiliza una estructura de datos eficiente y escalable:
 |  +--------------------------+  |
 |                                  |
 |  +--------- Timeline ---------+  |
-|  | ● Recogida     [Completado]|  |
-|  | ● En tránsito  [En progreso]  |
-|  | ○ Llegada      [Pendiente] |  |
-|  | ○ Entrega      [Pendiente] |  |
+|  | ● Pickup       [Completed] |  |
+|  | ● In transit   [In progress]  |
+|  | ○ Arrival      [Pending]   |  |
+|  | ○ Delivery     [Pending]   |  |
 |  +--------------------------+  |
 |                                  |
 +----------------------------------+
 ```
 
-### Notificaciones WhatsApp
+### WhatsApp Notifications
 ```
 +----------------------------------+
-|      Alertas por WhatsApp        |
+|      WhatsApp Alerts             |
 +----------------------------------+
 |                                  |
-|  Teléfono: +52 123 4567 8901     |
+|  Phone: +52 123 4567 8901        |
 |                                  |
-|  [Ejemplo de Notificación]       |
+|  [Notification Example]          |
 |  +------------------------------+|
-|  | Tu embarque MSKU7627321 ha   ||
-|  | llegado al puerto de Long    ||
-|  | Beach. Despacho aduanal en   ||
-|  | las próximas 24 horas.       ||
+|  | Your shipment MSKU7627321    ||
+|  | has arrived at Long Beach    ||
+|  | port. Customs clearance will ||
+|  | begin in the next 24 hours.  ||
 |  +------------------------------+|
 |                                  |
-|  [ Cerrar ]    [ Abrir WhatsApp ]|
+|  [ Close ]    [ Open WhatsApp ]  |
 +----------------------------------+
 ```
 
-## Factibilidad y Usabilidad
+## Feasibility and Usability
 
-### Factibilidad Técnica
-- **Implementación Frontend**: Construido con Next.js y TypeScript para garantizar robustez y tipado seguro.
-- **Diseño Responsivo**: Funciona en dispositivos móviles y de escritorio gracias a Tailwind CSS.
-- **Integración de Servicios**: Preparado para conectarse a APIs de tracking, notificaciones y gestión documental.
-- **Escalabilidad**: Arquitectura modular que permite añadir nuevas funcionalidades sin afectar las existentes.
+### Technical Feasibility
+- **Frontend Implementation**: Built with Next.js and TypeScript to ensure robustness and type safety.
+- **Responsive Design**: Works on mobile and desktop devices thanks to Tailwind CSS.
+- **Service Integration**: Ready to connect to tracking APIs, notifications, and document management.
+- **Scalability**: Modular architecture that allows adding new functionalities without affecting existing ones.
 
-### Usabilidad
-- **Diseño Intuitivo**: Interfaz conversacional natural que no requiere aprendizaje especial.
-- **Respuestas Rápidas**: Minimiza la escritura del usuario al ofrecer opciones predefinidas contextualmente relevantes.
-- **Visualizaciones Claras**: Representación gráfica del estado de envíos para mejor comprensión.
-- **Accesibilidad**: Soporte para modo oscuro y traducción a múltiples idiomas.
-- **Opciones de Contacto**: Transición fluida entre el asistente automatizado y la atención humana.
+### Usability
+- **Intuitive Design**: Natural conversational interface that requires no special learning.
+- **Quick Replies**: Minimizes user typing by offering contextually relevant predefined options.
+- **Clear Visualizations**: Graphical representation of shipment status for better understanding.
+- **Accessibility**: Support for dark mode and translation into multiple languages.
+- **Contact Options**: Smooth transition between automated assistant and human attention.
 
-### Valor para el Negocio
-- **Reducción de Carga**: Disminuye la necesidad de atención telefónica para consultas básicas.
-- **Disponibilidad 24/7**: Ofrece asistencia continua a los clientes en cualquier zona horaria.
-- **Personalización**: Adapta las respuestas según el contexto del cliente y su historial.
-- **Notificaciones Proactivas**: Informa a los clientes sobre eventos importantes sin esperar a que consulten.
+### Business Value
+- **Reduced Workload**: Decreases the need for telephone support for basic inquiries.
+- **24/7 Availability**: Offers continuous assistance to customers in any time zone.
+- **Personalization**: Adapts responses according to the customer's context and history.
+- **Proactive Notifications**: Informs customers about important events without waiting for them to inquire.
 
-## Tecnologías Utilizadas
+## Technologies Used
 
 - **Frontend**: Next.js, React, TypeScript
-- **Estilos**: Tailwind CSS
-- **Internacionalización**: next-i18next
-- **Visualización Markdown**: react-markdown
+- **Styles**: Tailwind CSS
+- **Internationalization**: next-i18next
+- **Markdown Visualization**: react-markdown
 
-## Instalación y Uso
+## Installation and Usage
 
 ```bash
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Iniciar en modo desarrollo
+# Start in development mode
 npm run dev
 
-# Construir para producción
+# Build for production
 npm run build
 
-# Iniciar en producción
+# Start in production
 npm start
 ```
 
-## Próximos Pasos
+## Next Steps
 
-- Integración con APIs reales de tracking de Nowports
-- Implementación de autenticación de usuarios
-- Expandir capacidades de IA para respuestas más complejas
-- Añadir más idiomas y personalización regional
-- Desarrollar widgets para integración en sitios de terceros
+- Integration with Nowports' real tracking APIs
+- Implementation of user authentication
+- Expand AI capabilities for more complex responses
+- Add more languages and regional customization
+- Develop widgets for integration into third-party sites
 
-## Créditos y Herramientas
+## Credits and Tools
 
-Este proyecto fue desarrollado con la asistencia de herramientas de Inteligencia Artificial, que facilitaron y aceleraron el proceso de creación.  Agradecemos especialmente a:
+This project was developed with the assistance of Artificial Intelligence tools, which facilitated and accelerated the creation process. We especially thank:
 
-* **Google Gemini**:  Utilizado como modelo de lenguaje para la generación de respuestas inteligentes en el asistente de chat y para la iteración y mejora del diseño de la solución.
-* **IDX (Google Cloud Workstations)**:  Entorno de desarrollo en la nube que proporcionó un ambiente de programación eficiente y accesible para la construcción de este proyecto.
+* **Google Gemini**: Used as a language model for generating intelligent responses in the chat assistant and for iterating and improving the solution design.
+* **IDX (Google Cloud Workstations)**: Cloud development environment that provided an efficient and accessible programming environment for building this project.
 
-El uso de estas herramientas de IA nos permitió enfocarnos en la lógica y la experiencia del usuario, optimizando el tiempo de desarrollo y explorando soluciones innovadoras.
+The use of these AI tools allowed us to focus on logic and user experience, optimizing development time and exploring innovative solutions.
