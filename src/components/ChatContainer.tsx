@@ -103,14 +103,43 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
   const initializeChat = () => {
     const welcomeMessage: ChatMessage = {
       id: uuidv4(),
-      content: t('intro') + '\n\n' + t('help') + '\n• ' + t('routeInfo') + '\n• ' + t('quotes') + '\n• ' + t('tracking') + '\n• ' + t('documents') + '\n• ' + t('experts') + '\n\n' + t('howCanIHelp'),
+      content: t('intro') + '\n\n' + t('howCanIHelp'),
       role: 'assistant',
       timestamp: new Date().toISOString(),
       quickReplies: [
-        { label: 'Rutas China-Latinoamérica', value: 'Necesito información sobre rutas entre China y Latinoamérica', icon: '🚢' },
-        { label: 'Cotización transporte', value: 'Quiero solicitar una cotización para transporte internacional', icon: '💰' },
-        { label: 'Requisitos documentales', value: 'Cuáles son los requisitos documentales para importar', icon: '📄' },
-      ]
+        { 
+          label: t('routeInfo'),
+          value: t('requestRouteInfo', 'Necesito información sobre rutas y servicios'),
+          icon: '🚢',
+          description: t('routeInfoDesc', 'Tiempo de tránsito, salidas y puertos disponibles')
+        },
+        { 
+          label: t('quotes'), 
+          value: t('requestQuote', 'Quiero solicitar una cotización para transporte internacional'), 
+          icon: '💰',
+          description: t('quotesDesc', 'Obtenga una cotización preliminar para su carga')
+        },
+        { 
+          label: t('tracking'), 
+          value: t('requestTracking', 'Quiero hacer seguimiento a mi embarque'), 
+          icon: '📦',
+          description: t('trackingDesc', 'Status actualizado y ubicación de su carga')
+        },
+        { 
+          label: t('documents'), 
+          value: t('requestDocumentation', 'Cuáles son los requisitos documentales para importar'), 
+          icon: '📄',
+          description: t('documentsDesc', 'Documentos necesarios según origen/destino') 
+        },
+        { 
+          label: t('experts'), 
+          value: t('requestExpert', 'Necesito hablar con un especialista'), 
+          icon: '👨‍💼',
+          description: t('expertsDesc', 'Consultas especializadas y asistencia personalizada')
+        }
+      ],
+      quickRepliesVariant: 'feature',
+      quickRepliesColumns: 2
     };
     
     setChatState((prevState) => ({
@@ -780,35 +809,33 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
         </p>
       </div>
       
-      <div 
-        ref={chatContainerRef}
-        className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
-      >
+      <div className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`} ref={chatContainerRef}>
         {chatState.messages.map((message) => (
-          <ChatBubble key={message.id} message={message} theme={theme} />
-        ))}
-        
-        {quickReplyOptions.length > 0 && !chatState.isLoading && (
-          <QuickReplies 
-            options={quickReplyOptions} 
-            onSelect={handleQuickReplySelect} 
-            theme={theme} 
+          <ChatBubble 
+            key={message.id} 
+            message={message} 
+            theme={theme}
+            onQuickReplySelect={handleQuickReplySelect}
           />
-        )}
-        
+        ))}
+
         {chatState.isLoading && (
-          <div className={`flex items-center ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'} ml-2 mt-2`}>
-            <div className="loading-dots flex space-x-1">
-              <div className={`w-2 h-2 ${theme === 'dark' ? 'bg-gray-300' : 'bg-gray-400'} rounded-full animate-bounce delay-75`}></div>
-              <div className={`w-2 h-2 ${theme === 'dark' ? 'bg-gray-300' : 'bg-gray-400'} rounded-full animate-bounce delay-100`}></div>
-              <div className={`w-2 h-2 ${theme === 'dark' ? 'bg-gray-300' : 'bg-gray-400'} rounded-full animate-bounce delay-150`}></div>
-            </div>
+          <div className={`flex items-center justify-center my-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+            <div className="dot-typing"></div>
           </div>
         )}
 
         {chatState.error && (
           <div className={`text-red-500 text-sm my-2 p-2 ${theme === 'dark' ? 'bg-red-900/30' : 'bg-red-50'} rounded`}>
             {chatState.error}
+          </div>
+        )}
+
+        {/* Quick Reply options */}
+        {quickReplyOptions.length > 0 && !chatState.isLoading && (
+          <div className="mt-4">
+            <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Opciones rápidas:</p>
+            <QuickReplies options={quickReplyOptions} onSelect={handleQuickReplySelect} theme={theme} />
           </div>
         )}
       </div>
@@ -821,6 +848,61 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
           theme={theme}
         />
       </div>
+
+      <style jsx global>{`
+        /* Animación de puntos para indicar carga */
+        .dot-typing {
+          position: relative;
+          width: 6px;
+          height: 6px;
+          border-radius: 5px;
+          background-color: ${theme === 'dark' ? '#9ca3af' : '#6b7280'};
+          color: ${theme === 'dark' ? '#9ca3af' : '#6b7280'};
+          animation: dotTyping 1.5s infinite linear;
+        }
+        
+        .dot-typing::before,
+        .dot-typing::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          width: 6px;
+          height: 6px;
+          border-radius: 5px;
+          background-color: ${theme === 'dark' ? '#9ca3af' : '#6b7280'};
+          color: ${theme === 'dark' ? '#9ca3af' : '#6b7280'};
+          animation: dotTyping 1.5s infinite linear;
+        }
+        
+        .dot-typing::before {
+          left: -12px;
+          animation-delay: 0s;
+        }
+        
+        .dot-typing::after {
+          left: 12px;
+          animation-delay: 0.75s;
+        }
+        
+        @keyframes dotTyping {
+          0% {
+            transform: scale(1);
+            opacity: 0.7;
+          }
+          25% {
+            transform: scale(1.5);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1);
+            opacity: 0.7;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 0.7;
+          }
+        }
+      `}</style>
     </div>
   );
 };

@@ -6,6 +6,7 @@ export interface QuickReply {
   label: string;
   value: string;
   icon?: string;
+  description?: string;
 }
 
 export interface DocumentAttachment {
@@ -24,6 +25,8 @@ export interface ChatMessage {
   timestamp: string;
   attachments?: DocumentAttachment[];
   quickReplies?: QuickReply[];
+  quickRepliesVariant?: 'default' | 'feature';
+  quickRepliesColumns?: 1 | 2 | 3;
 }
 
 export interface ChatState {

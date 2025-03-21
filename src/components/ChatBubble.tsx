@@ -1,10 +1,12 @@
 import React from 'react';
-import { ChatMessage, DocumentAttachment } from '../types/chat';
+import { ChatMessage, DocumentAttachment, QuickReply } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
+import QuickReplies from './QuickReplies';
 
 interface ChatBubbleProps {
   message: ChatMessage;
   theme?: 'light' | 'dark';
+  onQuickReplySelect?: (value: string) => void;
 }
 
 const DocumentPreview: React.FC<{ document: DocumentAttachment; theme: 'light' | 'dark' }> = ({ document, theme }) => {
@@ -74,7 +76,7 @@ const DocumentPreview: React.FC<{ document: DocumentAttachment; theme: 'light' |
   );
 };
 
-const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => {
+const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQuickReplySelect }) => {
   const isUser = message.role === 'user';
   
   // Format timestamp safely
@@ -120,6 +122,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => 
     : `max-w-[80%] rounded-2xl rounded-tl-sm px-4 py-2 ${themeStyles.assistant[theme]} shadow-sm`;
 
   const hasAttachments = message.attachments && message.attachments.length > 0;
+  const hasQuickReplies = message.quickReplies && message.quickReplies.length > 0;
 
   return (
     <div className={containerStyles}>
@@ -187,6 +190,19 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light' }) => 
             </div>
           )}
         </div>
+        
+        {/* Quick Replies */}
+        {hasQuickReplies && onQuickReplySelect && (
+          <div className="mt-2 w-full">
+            <QuickReplies 
+              options={message.quickReplies || []} 
+              onSelect={onQuickReplySelect} 
+              theme={theme}
+              variant={message.quickRepliesVariant || 'default'}
+              columns={message.quickRepliesColumns || 1}
+            />
+          </div>
+        )}
         
         {/* Timestamp */}
         <div className={`text-xs mt-1 ${isUser ? 'text-right' : 'text-left'} ${themeStyles.time[theme]}`}>
