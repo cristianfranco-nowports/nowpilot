@@ -864,6 +864,157 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
 
   // Manejar la selección de una respuesta rápida
   const handleQuickReplySelect = (value: string) => {
+    // Verificar si es una solicitud para contactar con el agente asignado
+    if (value.toLowerCase().includes('contactar con mi agente') || value.toLowerCase().includes('contactar agente')) {
+      // Crear un mensaje del usuario
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Simular respuesta del asistente después de un breve retraso
+      setTimeout(() => {
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: "Entendido. Para contactar a tu agente asignado, por favor proporciona tu número de cuenta Nowports o el nombre de tu empresa. Con esta información, podré localizar a tu agente y facilitar la comunicación de inmediato.",
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 800);
+      
+      return;
+    }
+    
+    // Verificar si ha proporcionado nombre de empresa después de solicitar contactar con agente
+    const empresaRegex = /(Olivera S\.C|Transportes Unidos|Global Logistics)/i;
+    const empresaMatch = value.match(empresaRegex);
+    
+    if (empresaMatch && 
+        chatState.messages.some(m => m.content.toLowerCase().includes("contactar a tu agente") || 
+                                    m.content.toLowerCase().includes("proporciona tu número"))) {
+      // Crear un mensaje del usuario
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Información del agente basada en la empresa
+      const empresa = empresaMatch[1];
+      const ejecutivo = empresa === "Olivera S.C" ? "María González" : 
+                        empresa === "Transportes Unidos" ? "Carlos Ramírez" : "Ana López";
+      const telefono = empresa === "Olivera S.C" ? "+52 55 1234 5678" : 
+                      empresa === "Transportes Unidos" ? "+52 55 8765 4321" : "+52 55 4567 8901";
+      const email = empresa === "Olivera S.C" ? "maria.gonzalez@nowports.com" : 
+                    empresa === "Transportes Unidos" ? "carlos.ramirez@nowports.com" : "ana.lopez@nowports.com";
+
+      // Simular respuesta del asistente después de un breve retraso
+      setTimeout(() => {
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: `🧑‍💼 **Información de contacto del ejecutivo para ${empresa}**\n\n` +
+                   `**Ejecutivo asignado:** ${ejecutivo}\n` +
+                   `**Teléfono directo:** ${telefono}\n` +
+                   `**Correo electrónico:** ${email}\n` +
+                   `**Horario de atención:** Lunes a Viernes de 9:00 a 18:00 hrs\n\n` +
+                   `Puedes contactar a ${ejecutivo} a través de cualquiera de los siguientes medios:`,
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          quickReplies: [
+            { label: 'Llamar ahora', value: `Llamar a ${ejecutivo} al ${telefono}`, icon: '📞' },
+            { label: 'Enviar WhatsApp', value: `Enviar WhatsApp a ${ejecutivo}`, icon: '💬' },
+            { label: 'Enviar correo', value: `Enviar correo a ${email}`, icon: '📧' },
+            { label: 'Agendar llamada', value: 'Agendar una llamada para más tarde', icon: '📅' }
+          ]
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 800);
+      
+      return;
+    }
+    
+    // Verificar si quiere llamar, enviar WhatsApp o correo al agente
+    const contactMethodRegex = /(?:Llamar|Enviar WhatsApp|Enviar correo) a (.+?)(?:\sal\s|\sa\s)?(.+)?/i;
+    const contactMatch = value.match(contactMethodRegex);
+    
+    if (contactMatch) {
+      const contactMethod = value.toLowerCase().includes("llamar") ? "llamada telefónica" : 
+                           value.toLowerCase().includes("whatsapp") ? "WhatsApp" : "correo electrónico";
+      const ejecutivo = contactMatch[1];
+      
+      // Crear un mensaje del usuario
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Simular respuesta del asistente después de un breve retraso
+      setTimeout(() => {
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: `✅ **Contacto iniciado**\n\n` +
+                   `Te he conectado con ${ejecutivo} vía ${contactMethod}.\n\n` +
+                   (contactMethod === "llamada telefónica" ? 
+                     `La llamada se iniciará en breve. Por favor, ten en cuenta que en un entorno real, esto abriría tu aplicación de teléfono con el número marcado.` : 
+                    contactMethod === "WhatsApp" ? 
+                     `He preparado un mensaje en WhatsApp. En un entorno real, esto abriría la aplicación de WhatsApp con un mensaje predefinido para tu ejecutivo.` :
+                     `He preparado un correo electrónico. En un entorno real, esto abriría tu cliente de correo con un mensaje predefinido para tu ejecutivo.`),
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          quickReplies: [
+            { label: 'Ver estado de envíos', value: 'Ver estado de mis envíos activos', icon: '📦' },
+            { label: 'Nueva cotización', value: 'Quiero iniciar una cotización', icon: '💰' },
+            { label: 'Regresar al menú', value: 'Mostrar menú principal', icon: '🏠' }
+          ]
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 800);
+      
+      return;
+    }
+    
     // Verificar si es una solicitud para actualizar el estado de un envío
     const updateTrackingRegex = /actualizar estado del env(í|i)o ([A-Z]{3}\d{7})/i;
     const updateMatch = value.toLowerCase().match(updateTrackingRegex);
