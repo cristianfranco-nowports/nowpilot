@@ -774,9 +774,9 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
   return (
     <div className="flex flex-col h-full">
       <div className={`${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'} p-4 rounded-t-lg shadow`}>
-        <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Nowports Sales Assistant</h2>
+        <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Nowports Assistant</h2>
         <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-          Ask me about logistics, shipping routes, and how Nowports can help your business
+          {t('askAboutLogistics', 'Ask me about logistics, shipping routes, and how Nowports can help your business')}
         </p>
       </div>
       
