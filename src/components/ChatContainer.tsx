@@ -864,6 +864,47 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
 
   // Manejar la selección de una respuesta rápida
   const handleQuickReplySelect = (value: string) => {
+    // Verificar si la respuesta rápida es para consultar un envío
+    if (value.toLowerCase().includes('consultar un envío') || value.toLowerCase().includes('consultar envío')) {
+      // Crear un mensaje del usuario 
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Simular respuesta del asistente después de un breve retraso
+      setTimeout(() => {
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: "Por favor ingresa el código de seguimiento de tu envío. Los códigos tienen el formato ECRxxxxxxx para exportaciones o ICRxxxxxxx para importaciones.",
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          quickReplies: [
+            { label: 'ECR2503586', value: 'Quiero consultar el envío ECR2503586', icon: '📦' },
+            { label: 'ICR1982375', value: 'Quiero consultar el envío ICR1982375', icon: '📦' },
+            { label: 'Cancelar', value: 'Cancelar consulta', icon: '❌' }
+          ]
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 800);
+      
+      return;
+    }
+    
     // Verificar si la respuesta rápida es para solicitar un documento
     if (value.toLowerCase().includes('modelo actualizado') || 
         value.toLowerCase().includes('documentos') || 
