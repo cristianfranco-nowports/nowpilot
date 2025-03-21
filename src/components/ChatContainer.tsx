@@ -790,9 +790,15 @@ Con esta información, te proporcionaré una cotización personalizada y te expl
         responseContent.toLowerCase().includes('contactar a su ejecutivo') ||
         responseContent.toLowerCase().includes('comunicarse con su agente') ||
         responseContent.toLowerCase().includes('opciones para contactar') ||
+        responseContent.toLowerCase().includes('contactar a tu ejecutivo asignado') ||
+        responseContent.toLowerCase().includes('¿te gustaría contactar a tu ejecutivo asignado?') ||
+        responseContent.toLowerCase().includes('puedes hacerlo por whatsapp, llamada o email') ||
         content.toLowerCase().includes('contactar ejecutivo') ||
         content.toLowerCase().includes('hablar con agente') ||
-        content.toLowerCase().includes('contactar agente')
+        content.toLowerCase().includes('contactar agente') ||
+        content.toLowerCase().includes('especialista') ||
+        content.toLowerCase().includes('necesito hablar con un') ||
+        content.toLowerCase().includes('quiero hablar con un')
       ) {
         console.log('Detected customer agent contact request');
         
@@ -805,6 +811,12 @@ Con esta información, te proporcionaré una cotización personalizada y te expl
           email: agentName.toLowerCase().replace(' ', '.') + '@nowports.com',
           phone: '+52 1 33 ' + (Math.floor(Math.random() * 9000000) + 1000000)
         };
+        
+        // Si la respuesta no contiene ya el mensaje sobre contactar ejecutivo,
+        // reemplazarla con un mensaje estándar que active el componente
+        if (!responseContent.toLowerCase().includes('ejecutivo asignado')) {
+          responseContent = `Entendido. ¿Te gustaría contactar a tu ejecutivo asignado? Puedes hacerlo por WhatsApp, llamada o email.`;
+        }
       }
 
       // 3. Detectar solicitud de documentos

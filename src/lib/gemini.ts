@@ -90,6 +90,13 @@ function getFallbackResponse(query: string, context: any): string {
   // Lógica simple para generar una respuesta basada en palabras clave
   const queryLower = query.toLowerCase();
   
+  // Detectar solicitud de contacto con ejecutivo o especialista
+  if (queryLower.includes("ejecutivo") || queryLower.includes("especialista") || 
+      queryLower.includes("agente") || queryLower.includes("contactar") || 
+      queryLower.includes("hablar con") || queryLower.includes("llamar")) {
+    return `Entendido. ¿Te gustaría contactar a tu ejecutivo asignado? Puedes hacerlo por WhatsApp, llamada o email.`;
+  }
+  
   if (queryLower.includes("ruta") || queryLower.includes("enviar") || queryLower.includes("shipping")) {
     return `✈️ Ofrecemos múltiples rutas de transporte internacional adaptadas a sus necesidades. 
 Para proporcionarle información específica, necesito conocer:
@@ -160,6 +167,14 @@ export async function getGeminiResponse(
     if (!GEMINI_API_KEY) {
       console.warn("No Gemini API key found. Using fallback response.");
       return getFallbackResponse(query, context);
+    }
+    
+    // Detectar solicitud de contacto con ejecutivo o especialista antes de hacer la llamada API
+    const queryLower = query.toLowerCase();
+    if (queryLower.includes("ejecutivo") || queryLower.includes("especialista") || 
+        queryLower.includes("agente") || queryLower.includes("contactar") || 
+        queryLower.includes("hablar con") || queryLower.includes("llamar")) {
+      return `Entendido. ¿Te gustaría contactar a tu ejecutivo asignado? Puedes hacerlo por WhatsApp, llamada o email.`;
     }
     
     // Crear un resumen de datos de rutas y tarifas del contexto
@@ -361,10 +376,11 @@ PATRONES DE DETECCIÓN (usa estos patrones para determinar cuándo sugerir compo
    - Formato: [quickReplies: Ingresar código, Contactar soporte]
 
 2. Contacto con Ejecutivo:
-   - Detectar frases como "hablar con ejecutivo", "contactar agente", "necesito ayuda personal", "llamar"
+   - Detectar frases como "hablar con ejecutivo", "contactar agente", "necesito ayuda personal", "llamar", "especialista"
    - Si hay un código de seguimiento mencionado, sugerir contactar al ejecutivo asignado a ese envío
-   - Sugerir: "¿Le gustaría contactar a su ejecutivo asignado? Puede hacerlo por WhatsApp, llamada o email"
-   - Formato: [quickReplies: WhatsApp, Llamada, Email, No por ahora]
+   - En lugar de mostrar quickReplies, devolver este mensaje exacto: "Entendido. ¿Te gustaría contactar a tu ejecutivo asignado? Puedes hacerlo por WhatsApp, llamada o email."
+   - Este texto activará la tarjeta de contacto del ejecutivo (customerAgentData) automáticamente
+   - Importante: NO incluir opciones de [quickReplies: ...] cuando se trate de contacto con ejecutivo
 
 3. Solicitud de Cotización:
    - Detectar frases sobre cotizar, precios, tarifas, costo de envío
@@ -700,6 +716,14 @@ function shouldHaveQuickReplies(query: string, response: string): boolean {
   const queryLower = query.toLowerCase();
   const responseLower = response.toLowerCase();
   
+  // Si es una solicitud de contacto con ejecutivo, no añadir quickReplies
+  if (queryLower.includes("ejecutivo") || queryLower.includes("especialista") || 
+      queryLower.includes("agente") || queryLower.includes("contactar") || 
+      queryLower.includes("hablar con") || queryLower.includes("llamar") ||
+      responseLower.includes("ejecutivo asignado") || responseLower.includes("contactar a tu ejecutivo")) {
+    return false;
+  }
+  
   // Verificar si la respuesta contiene una pregunta
   const hasQuestion = response.includes('?');
   
@@ -730,10 +754,19 @@ function shouldHaveQuickReplies(query: string, response: string): boolean {
  * Añade quickReplies predeterminadas basado en el contexto de la consulta y respuesta
  */
 function addDefaultQuickReplies(query: string, response: string): string {
+  const queryLower = query.toLowerCase();
   const responseLower = response.toLowerCase();
   
   // No añadir quickReplies si ya están presentes
   if (response.includes('[quickReplies:')) {
+    return response;
+  }
+  
+  // Si es una solicitud de contacto con ejecutivo, no añadir quickReplies
+  if (queryLower.includes("ejecutivo") || queryLower.includes("especialista") || 
+      queryLower.includes("agente") || queryLower.includes("contactar") || 
+      queryLower.includes("hablar con") || queryLower.includes("llamar") ||
+      responseLower.includes("ejecutivo asignado") || responseLower.includes("contactar a tu ejecutivo")) {
     return response;
   }
   
