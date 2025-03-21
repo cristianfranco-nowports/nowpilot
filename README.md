@@ -160,3 +160,12 @@ npm start
 - Expandir capacidades de IA para respuestas más complejas
 - Añadir más idiomas y personalización regional
 - Desarrollar widgets para integración en sitios de terceros
+
+## Créditos y Herramientas
+
+Este proyecto fue desarrollado con la asistencia de herramientas de Inteligencia Artificial, que facilitaron y aceleraron el proceso de creación.  Agradecemos especialmente a:
+
+* **Google Gemini**:  Utilizado como modelo de lenguaje para la generación de respuestas inteligentes en el asistente de chat y para la iteración y mejora del diseño de la solución.
+* **IDX (Google Cloud Workstations)**:  Entorno de desarrollo en la nube que proporcionó un ambiente de programación eficiente y accesible para la construcción de este proyecto.
+
+El uso de estas herramientas de IA nos permitió enfocarnos en la lógica y la experiencia del usuario, optimizando el tiempo de desarrollo y explorando soluciones innovadoras.
