@@ -45,12 +45,16 @@ const ChatInput: React.FC<ChatInputProps> = ({
     // Trim message to remove trailing whitespace
     const trimmedMessage = message.trim();
     
+    // Handle document submission regardless of message content
+    if (selectedFile && onSendDocument) {
+      onSendDocument(selectedFile);
+      setSelectedFile(null);
+    }
+    
+    // Handle message submission
     if (trimmedMessage) {
       onSendMessage(trimmedMessage);
       setMessage('');
-    } else if (selectedFile && onSendDocument) {
-      onSendDocument(selectedFile);
-      setSelectedFile(null);
     }
     
     // Reset input height
@@ -115,9 +119,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   const isDisabled = (isLoading || disabled) && !selectedFile;
+  const canSend = (message.trim() || selectedFile) && !isLoading && !disabled;
 
   return (
-    <div className={`${themeStyles.container[theme]}`}>
+    <div className={`${themeStyles.container[theme]} rounded-b-lg shadow-sm`}>
       {selectedFile && (
         <div className={`${themeStyles.filePreview[theme]} rounded-lg p-2 mb-2 flex items-center border`}>
           <div className="flex-1 min-w-0">
@@ -132,6 +137,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             type="button" 
             onClick={handleRemoveFile}
             className={`ml-2 p-1 rounded-full ${theme === 'dark' ? 'bg-gray-500 text-gray-200 hover:bg-gray-400' : 'bg-blue-100 text-blue-500 hover:bg-blue-200'}`}
+            aria-label="Remove file"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -140,13 +146,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
       
-      <form onSubmit={handleSubmit} className={`flex items-end space-x-2`}>
+      <form onSubmit={handleSubmit} className={`flex items-end space-x-2 p-2`}>
         <button
           type="button"
           onClick={handleFileClick}
-          className={`${isLoading || disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600'} p-2 rounded-full mr-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}
+          className={`${isLoading || disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600'} p-2 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}
           disabled={isLoading || disabled}
           title={t('uploadDoc')}
+          aria-label="Attach file"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -168,7 +175,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             onKeyDown={handleKeyDown}
             placeholder={t('type')}
             rows={1}
-            className={`block w-full py-2 px-3 pr-16 resize-none ${theme === 'dark' ? 'bg-gray-600 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-100 text-gray-900 placeholder-gray-500 border-gray-200'} rounded-lg border focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500`}
+            className={`block w-full py-3 px-4 resize-none ${theme === 'dark' ? 'bg-gray-700 text-white placeholder-gray-400 border-gray-600' : 'bg-gray-100 text-gray-900 placeholder-gray-500 border-gray-200'} rounded-2xl border focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all`}
             disabled={isLoading || disabled}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -177,9 +184,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
         
         <button
           type="submit"
-          className={`ml-2 p-2 rounded-full ${message.trim() || selectedFile ? (theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700') : (theme === 'dark' ? 'bg-gray-600 text-gray-400' : 'bg-gray-200 text-gray-500')} ${isLoading || disabled ? 'opacity-50 cursor-not-allowed' : ''} focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-white`}
-          disabled={((!message.trim() && !selectedFile) || isLoading || disabled)}
+          className={`p-3 rounded-full ${
+            canSend 
+              ? `${theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'} text-white` 
+              : `${theme === 'dark' ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500'}`
+          } ${isLoading || disabled ? 'opacity-50 cursor-not-allowed' : ''} 
+          focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all`}
+          disabled={!canSend}
           title={t('send')}
+          aria-label="Send message"
         >
           {isLoading ? (
             <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -188,7 +201,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             </svg>
           ) : (
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           )}
         </button>
