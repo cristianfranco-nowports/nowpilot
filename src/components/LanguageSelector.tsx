@@ -15,7 +15,7 @@ const LanguageSelector = () => {
     { code: 'pt', name: 'Português', flag: '🇧🇷' }
   ];
 
-  // Cerrar el dropdown cuando se hace clic fuera de él
+  // Close the dropdown when clicking outside of it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -29,13 +29,13 @@ const LanguageSelector = () => {
     };
   }, []);
 
-  // Cambiar el idioma y cerrar el dropdown
+  // Change language and close the dropdown
   const changeLanguage = (locale: string) => {
     router.push({ pathname, query }, asPath, { locale });
     setIsOpen(false);
   };
 
-  // Encontrar el idioma actual
+  // Find current language
   const currentLanguage = languages.find(lang => lang.code === router.locale) || languages[0];
 
   return (

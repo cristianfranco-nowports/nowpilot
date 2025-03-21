@@ -18,7 +18,7 @@ interface QuickReplyOption {
   description?: string;
 }
 
-// Estado para el formulario de cotización
+// State for quote form
 interface QuoteFormState {
   active: boolean;
   step: number;
@@ -32,7 +32,7 @@ interface QuoteFormState {
   hsCode?: string;
   incoterm?: string;
   notes?: string;
-  history: number[]; // Para implementar navegación hacia atrás
+  history: number[]; // To implement back navigation
 }
 
 // Documento simulado para el ejemplo
@@ -146,12 +146,12 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
     }));
   };
 
-  // Manejar la progresión del formulario de cotización
+  // Handle the progression of the quote form
   const handleQuoteFormProgress = (userInput: string) => {
     setQuoteForm(prev => {
       const newForm = { ...prev };
       
-      // Guardar el paso actual en el historial para navegación hacia atrás
+      // Save the current step in history for back navigation
       newForm.history = [...prev.history, prev.step];
       
       // Manejar comandos especiales
@@ -166,7 +166,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
       }
       
       if (userInput.toLowerCase() === 'cancelar cotización' || userInput.toLowerCase() === 'cancelar') {
-        // Añadir mensaje de cancelación
+        // Add cancellation message
         const cancelMessage: ChatMessage = {
           id: uuidv4(),
           content: "Has cancelado la cotización. ¿En qué más puedo ayudarte?",

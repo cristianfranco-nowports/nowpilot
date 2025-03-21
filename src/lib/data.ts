@@ -393,7 +393,7 @@ export const tariffs: Tariff[] = [
   }
 ];
 
-// Información de puertos
+// Port information
 export const ports: PortInfo[] = [
   {
     id: "port-1",
@@ -513,7 +513,7 @@ export const insuranceOptions: InsuranceOption[] = [
   }
 ];
 
-// Requisitos aduaneros por país
+// Customs requirements by country
 export const customsRegulations: CustomsRegulation[] = [
   {
     id: "customs-1",
