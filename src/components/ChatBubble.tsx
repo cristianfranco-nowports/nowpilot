@@ -156,6 +156,15 @@ const CustomerAgent: React.FC<{ data: CustomerAgentData; theme: 'light' | 'dark'
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQuickReplySelect }) => {
   const isUser = message.role === 'user';
   
+  // Clean any quickReplies format from the message content
+  const cleanedContent = React.useMemo(() => {
+    if (message.role === 'assistant' && typeof message.content === 'string') {
+      const quickRepliesRegex = /\[quickReplies:\s*(.*?)\]/i;
+      return message.content.replace(quickRepliesRegex, '').trim();
+    }
+    return message.content;
+  }, [message.content, message.role]);
+  
   // Format timestamp safely
   let formattedTime = '';
   try {
@@ -251,7 +260,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
                   pre: ({ node, ...props }) => <pre className="my-2 animate-fadeIn" {...props as React.HTMLAttributes<HTMLPreElement>} />,
                 }}
               >
-                {message.content}
+                {cleanedContent}
               </ReactMarkdown>
             </div>
           )}

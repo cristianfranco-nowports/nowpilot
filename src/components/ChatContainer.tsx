@@ -496,14 +496,18 @@ Con esta información, te proporcionaré una cotización personalizada y te expl
       
       // Actualizar el contenido del mensaje sin el formato quickReplies
       if (chatState.messages.length > 0) {
-        const lastMessage = chatState.messages[chatState.messages.length - 1];
+        const lastMessageIndex = chatState.messages.length - 1;
+        const lastMessage = chatState.messages[lastMessageIndex];
         if (lastMessage.role === 'assistant') {
-          setChatState(prev => ({
-            ...prev,
-            messages: prev.messages.map(msg => 
-              msg.id === lastMessage.id ? { ...msg, content: cleanedContent } : msg
-            )
-          }));
+          // Usar setTimeout para asegurar que el estado se actualice después de que el componente se haya renderizado completamente
+          setTimeout(() => {
+            setChatState(prev => ({
+              ...prev,
+              messages: prev.messages.map((msg, index) => 
+                index === lastMessageIndex ? { ...msg, content: cleanedContent } : msg
+              )
+            }));
+          }, 0);
         }
       }
       
@@ -1531,8 +1535,12 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
           </div>
         )}
 
-        {/* Quick Reply options */}
-        {quickReplyOptions.length > 0 && !chatState.isLoading && (
+        {/* Quick Reply options - solo se muestran si no hay un mensaje del asistente con quickReplies */}
+        {quickReplyOptions.length > 0 && !chatState.isLoading && 
+         !(chatState.messages.length > 0 && 
+           chatState.messages[chatState.messages.length - 1].role === 'assistant' && 
+           chatState.messages[chatState.messages.length - 1].quickReplies && 
+           chatState.messages[chatState.messages.length - 1].quickReplies!.length > 0) && (
           <div className="mt-4 animate-slideUp">
             <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Opciones rápidas:</p>
             <QuickReplies options={quickReplyOptions} onSelect={handleQuickReplySelect} theme={theme} />
