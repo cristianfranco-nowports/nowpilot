@@ -674,7 +674,13 @@ Con esta información, te proporcionaré una cotización personalizada y te expl
     try {
       console.log('Sending message to API:', content);
       
-      // Enviar el mensaje a la API
+      // Preparar el historial de mensajes recientes para enviar a la API
+      const recentMessages = chatState.messages.slice(-10).map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      // Enviar el mensaje y el historial a la API
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -683,6 +689,7 @@ Con esta información, te proporcionaré una cotización personalizada y te expl
         body: JSON.stringify({
           message: content,
           sessionId: chatState.sessionId,
+          history: recentMessages  // Enviar historial de conversación
         }),
       });
 
@@ -697,50 +704,135 @@ Con esta información, te proporcionaré una cotización personalizada y te expl
       const data = await response.json();
       console.log('Received response:', data);
 
-      // Si hay una coincidencia de tracking code, dar formato especial a la respuesta
+      // Procesar la respuesta para detectar patrones y activar componentes visuales
       let responseContent = data.response;
-      if (trackingMatch && trackingMatch[1]) {
-        // Simulamos información para el código de envío específico
-        const trackingCode = trackingMatch[1];
-        responseContent = `📦 **Información del envío ${trackingCode}**\n\n`;
-        
-        // Generar algunos datos de ejemplo basados en el código
-        const isExport = trackingCode.startsWith('ECR');
-        const isImport = trackingCode.startsWith('ICR');
-        
-        responseContent += `**Estado actual:** ${isExport ? 'En tránsito internacional' : isImport ? 'En aduana' : 'Programado'}\n`;
-        responseContent += `**Tipo de operación:** ${isExport ? 'Exportación' : isImport ? 'Importación' : 'Nacional'}\n`;
-        responseContent += `**Origen:** ${isExport ? 'Manzanillo, México' : 'Shanghái, China'}\n`;
-        responseContent += `**Destino:** ${isExport ? 'Long Beach, EE.UU.' : 'Veracruz, México'}\n`;
-        responseContent += `**Fecha estimada de llegada:** ${new Date(Date.now() + 15*24*60*60*1000).toLocaleDateString()}\n`;
-        responseContent += `**Documentos disponibles:** [BL] [Factura Comercial] [Packing List]\n\n`;
-        responseContent += `¿Necesitas más información sobre este envío? Puedo ayudarte con:\n`;
-        responseContent += `- Actualización de estado\n`;
-        responseContent += `- Documentación adicional\n`;
-        responseContent += `- Comunicación con el agente asignado`;
-      }
+      let trackingVisualization = undefined;
+      let customerAgentData = undefined;
+      let attachments = undefined;
+
+      // 1. Detectar códigos de seguimiento en la respuesta o consulta
+      const responseTrackingMatch = responseContent.match(/\b([A-Z]{3}\d{7})\b/);
+      const trackingCode = (trackingMatch && trackingMatch[1]) || (responseTrackingMatch && responseTrackingMatch[1]);
       
-      // Si hay una coincidencia de empresa, dar formato especial a la respuesta
-      if (companyMatch && companyMatch[1]) {
-        const company = companyMatch[1];
-        responseContent = `🏢 **Información de ${company}**\n\n`;
-        responseContent += `**Cliente desde:** 2019\n`;
-        responseContent += `**Ejecutivo asignado:** María González\n`;
-        responseContent += `**Envíos activos:** 3\n`;
-        responseContent += `**Envíos completados:** 27\n\n`;
-        responseContent += `**Envíos recientes:**\n`;
-        responseContent += `- ECR2503586: México a EE.UU. (En tránsito)\n`;
-        responseContent += `- ICR1982375: China a México (En aduana)\n`;
-        responseContent += `- ECR2437890: México a Canadá (Entregado el 15/04/2023)\n\n`;
-        responseContent += `¿En qué puedo ayudarte con ${company} hoy?`;
+      // Si hay un código de seguimiento y la respuesta sugiere mostrar tracking
+      if (trackingCode && (
+          responseContent.toLowerCase().includes('visualizar el estado') ||
+          responseContent.toLowerCase().includes('seguimiento de su envío') ||
+          responseContent.toLowerCase().includes('rastrear este envío') ||
+          content.toLowerCase().includes('tracking') ||
+          content.toLowerCase().includes('seguimiento') ||
+          content.toLowerCase().includes('rastrear')
+      )) {
+        console.log('Detected tracking visualization request for code:', trackingCode);
+        
+        // Generar datos de tracking basados en el código
+        const isExport = trackingCode.startsWith('ECR');
+        trackingVisualization = {
+          shipmentId: trackingCode,
+          origin: { 
+            name: isExport ? 'Manzanillo, México' : 'Shanghai, China',
+            lat: isExport ? 19.0495 : 31.2304,
+            lng: isExport ? -104.3140 : 121.4737
+          },
+          destination: { 
+            name: isExport ? 'Long Beach, EE.UU.' : 'Manzanillo, México',
+            lat: isExport ? 33.7701 : 19.0495,
+            lng: isExport ? -118.1937 : -104.3140
+          },
+          currentLocation: { 
+            name: isExport ? 'Océano Pacífico' : 'Puerto de Shanghai',
+            lat: isExport ? 24.5000 : 31.2304,
+            lng: isExport ? -112.0000 : 121.4737
+          },
+          estimatedArrival: isExport ? '04/04/2025' : '15/05/2025',
+          milestones: isExport ? [
+            { name: 'Recogida', date: '15/11/2023', status: 'completed' as const },
+            { name: 'Llegada a puerto de origen', date: '18/11/2023', status: 'completed' as const },
+            { name: 'Carga en buque', date: '20/11/2023', status: 'completed' as const },
+            { name: 'En tránsito marítimo', date: 'Actual', status: 'inProgress' as const },
+            { name: 'Llegada a puerto destino', date: '04/04/2025', status: 'upcoming' as const },
+            { name: 'Despacho aduanal', date: 'Pendiente', status: 'upcoming' as const },
+            { name: 'Entrega final', date: 'Pendiente', status: 'upcoming' as const }
+          ] : [
+            { name: 'Booking confirmado', date: '10/02/2024', status: 'completed' as const },
+            { name: 'Carga lista en almacén', date: '15/02/2024', status: 'completed' as const },
+            { name: 'Documentación en proceso', date: 'Actual', status: 'inProgress' as const },
+            { name: 'Embarque programado', date: '01/03/2024', status: 'upcoming' as const },
+            { name: 'En tránsito marítimo', date: 'Pendiente', status: 'upcoming' as const },
+            { name: 'Llegada a puerto destino', date: '15/05/2025', status: 'upcoming' as const },
+            { name: 'Entrega final', date: 'Pendiente', status: 'upcoming' as const }
+          ],
+          carrier: isExport ? 'Maersk Line' : 'COSCO Shipping',
+          vesselName: isExport ? 'Maersk Semarang' : 'COSCO Harmony',
+          containerNumbers: isExport ? ['MSKU7627321'] : ['CSLU9876543']
+        };
       }
 
-      // Crear mensaje del asistente desde la respuesta
+      // 2. Detectar solicitud de contacto con ejecutivo
+      if (
+        responseContent.toLowerCase().includes('contactar a su ejecutivo') ||
+        responseContent.toLowerCase().includes('comunicarse con su agente') ||
+        responseContent.toLowerCase().includes('opciones para contactar') ||
+        content.toLowerCase().includes('contactar ejecutivo') ||
+        content.toLowerCase().includes('hablar con agente') ||
+        content.toLowerCase().includes('contactar agente')
+      ) {
+        console.log('Detected customer agent contact request');
+        
+        // Determinar el agente basado en el código de tracking si existe
+        const agentName = trackingCode && trackingCode.startsWith('ECR') ? 'María González' : 'Carlos Rodríguez';
+        
+        customerAgentData = {
+          name: agentName,
+          position: 'Ejecutivo de Cuenta',
+          email: agentName.toLowerCase().replace(' ', '.') + '@nowports.com',
+          phone: '+52 1 33 ' + (Math.floor(Math.random() * 9000000) + 1000000)
+        };
+      }
+
+      // 3. Detectar solicitud de documentos
+      if (
+        responseContent.toLowerCase().includes('documentos del envío') ||
+        responseContent.toLowerCase().includes('ver los documentos') ||
+        responseContent.toLowerCase().includes('documentación disponible') ||
+        content.toLowerCase().includes('ver documentos') ||
+        content.toLowerCase().includes('mostrar documentos') ||
+        (trackingCode && content.toLowerCase().includes('documentos'))
+      ) {
+        console.log('Detected documents request');
+        
+        // Generar documentos de ejemplo
+        attachments = [
+          {
+            id: uuidv4(),
+            name: `BL-${trackingCode || 'SAMPLE'}.pdf`,
+            type: 'application/pdf',
+            size: 1024 * 1024 * 2.3, // 2.3 MB
+          },
+          {
+            id: uuidv4(),
+            name: `Commercial-Invoice-${trackingCode || 'SAMPLE'}.pdf`,
+            type: 'application/pdf',
+            size: 1024 * 512, // 512 KB
+          },
+          {
+            id: uuidv4(),
+            name: `Packing-List-${trackingCode || 'SAMPLE'}.pdf`,
+            type: 'application/pdf',
+            size: 1024 * 256, // 256 KB
+          }
+        ];
+      }
+
+      // Crear mensaje del asistente desde la respuesta con los componentes detectados
       const assistantMessage: ChatMessage = {
         id: uuidv4(),
         content: responseContent,
         role: 'assistant',
         timestamp: Date.now().toString(),
+        trackingVisualization: trackingVisualization,
+        customerAgentData: customerAgentData,
+        attachments: attachments
       };
 
       // Actualizar el estado del chat con la respuesta del asistente
@@ -949,21 +1041,21 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
           },
           estimatedArrival: trackingCode.startsWith('ECR') ? '04/04/2025' : '15/05/2025',
           milestones: trackingCode.startsWith('ECR') ? [
-            { name: 'Recogida', date: '15/11/2023', status: 'completed' },
-            { name: 'Llegada a puerto de origen', date: '18/11/2023', status: 'completed' },
-            { name: 'Carga en buque', date: '20/11/2023', status: 'completed' },
-            { name: 'En tránsito marítimo', date: 'Actual', status: 'inProgress' },
-            { name: 'Llegada a puerto destino', date: '04/04/2025', status: 'upcoming' },
-            { name: 'Despacho aduanal', date: 'Pendiente', status: 'upcoming' },
-            { name: 'Entrega final', date: 'Pendiente', status: 'upcoming' }
+            { name: 'Recogida', date: '15/11/2023', status: 'completed' as const },
+            { name: 'Llegada a puerto de origen', date: '18/11/2023', status: 'completed' as const },
+            { name: 'Carga en buque', date: '20/11/2023', status: 'completed' as const },
+            { name: 'En tránsito marítimo', date: 'Actual', status: 'inProgress' as const },
+            { name: 'Llegada a puerto destino', date: '04/04/2025', status: 'upcoming' as const },
+            { name: 'Despacho aduanal', date: 'Pendiente', status: 'upcoming' as const },
+            { name: 'Entrega final', date: 'Pendiente', status: 'upcoming' as const }
           ] : [
-            { name: 'Booking confirmado', date: '10/02/2024', status: 'completed' },
-            { name: 'Carga lista en almacén', date: '15/02/2024', status: 'completed' },
-            { name: 'Documentación en proceso', date: 'Actual', status: 'inProgress' },
-            { name: 'Embarque programado', date: '01/03/2024', status: 'upcoming' },
-            { name: 'En tránsito marítimo', date: 'Pendiente', status: 'upcoming' },
-            { name: 'Llegada a puerto destino', date: '15/05/2025', status: 'upcoming' },
-            { name: 'Entrega final', date: 'Pendiente', status: 'upcoming' }
+            { name: 'Booking confirmado', date: '10/02/2024', status: 'completed' as const },
+            { name: 'Carga lista en almacén', date: '15/02/2024', status: 'completed' as const },
+            { name: 'Documentación en proceso', date: 'Actual', status: 'inProgress' as const },
+            { name: 'Embarque programado', date: '01/03/2024', status: 'upcoming' as const },
+            { name: 'En tránsito marítimo', date: 'Pendiente', status: 'upcoming' as const },
+            { name: 'Llegada a puerto destino', date: '15/05/2025', status: 'upcoming' as const },
+            { name: 'Entrega final', date: 'Pendiente', status: 'upcoming' as const }
           ],
           carrier: trackingCode.startsWith('ECR') ? 'Maersk Line' : 'COSCO Shipping',
           vesselName: trackingCode.startsWith('ECR') ? 'Maersk Semarang' : 'COSCO Harmony',
@@ -1351,7 +1443,7 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
         documentToSend = SAMPLE_DOCUMENTS.bl;
       } else if (value.toLowerCase().includes('factura') || value.toLowerCase().includes('invoice')) {
         documentToSend = SAMPLE_DOCUMENTS.invoice;
-      } else if (value.toLowerCase().includes('packing')) {
+      } else if (value.toLowerCase().includes('pack') || value.toLowerCase().includes('packing')) {
         documentToSend = SAMPLE_DOCUMENTS.packing;
       } else if (value.toLowerCase().includes('aduana') || value.toLowerCase().includes('customs')) {
         documentToSend = SAMPLE_DOCUMENTS.custom;

@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { message, sessionId } = req.body;
+    const { message, sessionId, history } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
@@ -82,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       // Generate a response based on the message
-      const response = await generateResponse(message, context, currentSessionId, session);
+      const response = await generateResponse(message, context, currentSessionId, session, history);
       console.log('Generated response:', response);
 
       // Add response to message history
@@ -113,7 +113,8 @@ async function generateResponse(
   message: string, 
   context: ChatContext, 
   sessionId: string, 
-  session: Session
+  session: Session,
+  clientHistory?: { role: string; content: string }[]
 ): Promise<string> {
   // Convert to lowercase for case-insensitive matching
   const messageLower = message.toLowerCase();
@@ -334,16 +335,31 @@ Cada solución incluye:
   try {
     console.log('Using Gemini API for response');
     
-    // Extract previous messages for context (up to last 5 messages)
-    const recentMessages = session.messages
-      .slice(-10)
-      .map(msg => ({
+    // Preparar los mensajes para el historial
+    let chatHistory = [];
+    
+    // Si hay historial del cliente, usarlo (dar prioridad)
+    if (clientHistory && clientHistory.length > 0) {
+      console.log('Using client-provided message history');
+      // Convertir el formato del cliente al formato esperado por Gemini
+      chatHistory = clientHistory.map(msg => ({
         role: msg.role === 'user' ? 'user' as const : 'model' as const,
         parts: [{ text: msg.content }]
       }));
+    } else {
+      // Si no hay historial del cliente, usar el historial de la sesión
+      console.log('Using server session message history');
+      // Extract previous messages for context (up to last 10 messages)
+      chatHistory = session.messages
+        .slice(-10)
+        .map(msg => ({
+          role: msg.role === 'user' ? 'user' as const : 'model' as const,
+          parts: [{ text: msg.content }]
+        }));
+    }
     
     // Get response from Gemini
-    const geminiResponse = await getGeminiResponse(message, context, recentMessages);
+    const geminiResponse = await getGeminiResponse(message, context, chatHistory);
     
     // Analyze the response to set appropriate context
     if (geminiResponse.toLowerCase().includes('cotización') || 

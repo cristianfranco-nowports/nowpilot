@@ -140,9 +140,73 @@ Cadena de suministro:
 - Last Mile: Entrega final al destino del cliente
 `;
 
+    // Descripción de los componentes visuales especiales
+    const visualComponentsInfo = `
+COMPONENTES VISUALES DISPONIBLES:
+1. Tracking de Envíos (trackingVisualization):
+   - Muestra el mapa y la ruta del envío con origen, destino y ubicación actual
+   - Incluye hitos del viaje con fechas y estados (completado, en progreso, pendiente)
+   - Incluye detalles del transportista, buque y número de contenedor
+   - Debe activarse cuando el usuario busca un envío con código (formato ECRxxxxxxx o ICRxxxxxxx)
+
+2. Información de Agente (customerAgentData):
+   - Muestra una tarjeta con información del ejecutivo asignado
+   - Incluye su nombre, cargo, y botones para contactarlo (teléfono, WhatsApp, email)
+   - Debe activarse cuando el usuario solicita contactar a su ejecutivo
+
+3. Documentos (attachments):
+   - Muestra documentos adjuntos como Bills of Lading, facturas, packing lists
+   - Debe activarse cuando el usuario solicita ver documentos de un envío
+
+4. Opciones de Respuesta Rápida (quickReplies):
+   - Muestra botones con opciones de respuesta sugeridas
+   - Facilitan la navegación y toma de decisiones
+`;
+
+    // Instrucciones para detectar patrones y activar componentes específicos
+    const detectionPatterns = `
+PATRONES DE DETECCIÓN (usa estos patrones para determinar cuándo sugerir componentes visuales):
+
+1. Seguimiento de Envío:
+   - Detectar códigos de seguimiento con formato ECRxxxxxxx (exportación) o ICRxxxxxxx (importación)
+   - Detectar frases como "rastrear envío", "consultar estado", "dónde está mi pedido", "tracking", "seguimiento"
+   - Sugerir: "Para ver el estado de su envío, necesito el código de seguimiento en formato ECRxxxxxxx o ICRxxxxxxx"
+
+2. Contacto con Ejecutivo:
+   - Detectar frases como "hablar con ejecutivo", "contactar agente", "necesito ayuda personal", "llamar"
+   - Si hay un código de seguimiento mencionado, sugerir contactar al ejecutivo asignado a ese envío
+   - Sugerir: "¿Le gustaría contactar a su ejecutivo asignado? Puede hacerlo por WhatsApp, llamada o email"
+
+3. Solicitud de Cotización:
+   - Detectar frases sobre cotizar, precios, tarifas, costo de envío
+   - Activar flujo de cotización paso a paso (origen, destino, tipo de carga, etc.)
+   - Sugerir: "Para proporcionarle una cotización personalizada, necesito algunos datos. ¿De dónde a dónde desea enviar su carga?"
+
+4. Consulta de Documentos:
+   - Detectar frases sobre documentos, requisitos, papeles, trámites
+   - Si hay un código de seguimiento mencionado, sugerir ver los documentos de ese envío
+   - Sugerir: "¿Desea consultar los documentos disponibles para su envío?"
+`;
+
+    // Formatear el historial de chat para el prompt
+    let chatHistoryText = "";
+    if (chatHistory && chatHistory.length > 0) {
+      chatHistoryText = "\n\nHISTORIAL RECIENTE DE LA CONVERSACIÓN:\n";
+      chatHistory.forEach((msg) => {
+        const role = msg.role === "user" ? "Usuario" : "Asistente";
+        chatHistoryText += `${role}: ${msg.parts[0].text}\n`;
+      });
+    }
+
     // Construir el prompt con contexto de Nowports y toda la información adicional
     const systemPrompt = `Eres un asistente virtual especializado en ventas de Nowports, una plataforma logística para comercio internacional.
 Tu objetivo es proporcionar información precisa, directa y útil sobre rutas marítimas, tarifas, tiempos de tránsito y servicios logísticos.
+
+INFORMACIÓN SOBRE LA APLICACIÓN DE CHAT:
+- Estás integrado en una interfaz de chat avanzada con componentes visuales interactivos
+- Puedes mostrar mapas de rastreo de envíos, tarjetas de contacto de ejecutivos y documentos
+- Los usuarios esperan respuestas directas que aprovechen estas capacidades visuales
+- La aplicación maneja flujos específicos para cotizaciones, seguimiento y contacto con ejecutivos
 
 INFORMACIÓN SOBRE NOWPORTS:
 - Nowports es un transitario digital que facilita el comercio internacional con tecnología innovadora
@@ -164,6 +228,10 @@ ${containersInfo}
 
 ${logisticsInfo}
 
+${visualComponentsInfo}
+
+${detectionPatterns}
+
 SERVICIOS NOWPORTS:
 - Transporte internacional (marítimo, aéreo, terrestre)
 - Agenciamiento aduanal y gestión de documentos
@@ -183,12 +251,18 @@ REGLAS IMPORTANTES:
 7. Evita frases vacías y genéricas.
 8. Usa la información de las rutas y tarifas proporcionadas cuando sea relevante para la consulta.
 9. Explica términos técnicos si es apropiado, pero mantén un nivel profesional.
-10. Siempre ofrece próximos pasos claros para el usuario.
+10. Analiza si la consulta requiere activar alguno de los componentes visuales especiales y sugiérelo explícitamente.
+11. Mantén coherencia con el historial de la conversación.
+12. Si detectas un código de seguimiento (ECRxxxxxxx o ICRxxxxxxx), menciona explícitamente que se puede visualizar su estado.
+13. Si el usuario solicita contactar a un ejecutivo, menciona explícitamente las opciones (WhatsApp, llamada, email).
+14. Para cotizaciones, guía al usuario por los pasos necesarios (origen, destino, carga, etc.).
+
+${chatHistoryText}
 
 CONSULTA DEL USUARIO:
 "${query}"
 
-Ahora responde a la consulta del usuario de manera directa, precisa y orientada a ventas, utilizando la información proporcionada.`;
+Ahora responde a la consulta del usuario de manera directa, precisa y orientada a ventas, utilizando la información proporcionada. Si detectas que la consulta justifica mostrar algún componente visual especial (tracking, agente, documentos), sugiérelo explícitamente en tu respuesta.`;
 
     // Preparar el prompt con toda la información
     const promptText = `${systemPrompt}\n\nUsuario: ${query}`;
