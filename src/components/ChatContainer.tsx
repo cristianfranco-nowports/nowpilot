@@ -14,6 +14,7 @@ interface QuickReplyOption {
   label: string;
   value: string;
   icon?: string;
+  description?: string;
 }
 
 // Estado para el formulario de cotización
@@ -30,6 +31,7 @@ interface QuoteFormState {
   hsCode?: string;
   incoterm?: string;
   notes?: string;
+  history: number[]; // Para implementar navegación hacia atrás
 }
 
 // Documento simulado para el ejemplo
@@ -82,7 +84,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
   const [quickReplyOptions, setQuickReplyOptions] = useState<QuickReplyOption[]>([]);
   const [quoteForm, setQuoteForm] = useState<QuoteFormState>({
     active: false,
-    step: 0
+    step: 0,
+    history: []
   });
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -152,6 +155,47 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
   const handleQuoteFormProgress = (userInput: string) => {
     setQuoteForm(prev => {
       const newForm = { ...prev };
+      
+      // Guardar el paso actual en el historial para navegación hacia atrás
+      newForm.history = [...prev.history, prev.step];
+      
+      // Manejar comandos especiales
+      if (userInput.toLowerCase() === 'volver' || userInput.toLowerCase() === 'atrás') {
+        if (newForm.history.length > 0) {
+          // Ir al paso anterior
+          const previousStep = newForm.history.pop();
+          newForm.step = previousStep || 0;
+          return newForm;
+        }
+        return prev; // Si no hay historial, mantenemos el estado actual
+      }
+      
+      if (userInput.toLowerCase() === 'cancelar cotización' || userInput.toLowerCase() === 'cancelar') {
+        // Añadir mensaje de cancelación
+        const cancelMessage: ChatMessage = {
+          id: uuidv4(),
+          content: "Has cancelado la cotización. ¿En qué más puedo ayudarte?",
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          quickReplies: [
+            { label: 'Iniciar nueva cotización', value: 'Quiero iniciar una cotización', icon: '📋' },
+            { label: 'Rastrear envío', value: 'Quiero rastrear mi envío', icon: '🔍' },
+            { label: 'Requisitos documentales', value: 'Cuáles son los requisitos documentales', icon: '📄' }
+          ]
+        };
+        
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, cancelMessage]
+        }));
+        
+        // Resetear el formulario
+        return {
+          active: false,
+          step: 0,
+          history: []
+        };
+      }
       
       // Actualizar el campo correspondiente según el paso actual
       switch (prev.step) {
@@ -231,12 +275,21 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
   const generateQuoteFormPrompt = () => {
     let assistantMessage: ChatMessage | null = null;
     let options: QuickReplyOption[] = [];
+    const totalSteps = 9;
+    const currentStep = quoteForm.step;
+    const progressText = `Paso ${currentStep} de ${totalSteps}`;
+    
+    // Opciones comunes para todos los pasos
+    const commonOptions: QuickReplyOption[] = [
+      { label: 'Volver atrás', value: 'volver', icon: '⬅️' },
+      { label: 'Cancelar', value: 'cancelar cotización', icon: '❌' }
+    ];
     
     switch (quoteForm.step) {
       case 1:
         assistantMessage = {
           id: uuidv4(),
-          content: "Para iniciar la cotización, necesito algunos datos. ¿Cuál es el origen de tu carga? (Ciudad y país)",
+          content: `${progressText}: Para iniciar la cotización, necesito algunos datos. ¿Cuál es el origen de tu carga? (Ciudad y país)`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
@@ -249,33 +302,62 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
       case 2:
         assistantMessage = {
           id: uuidv4(),
-          content: `Origen: ${quoteForm.origin}. Ahora, ¿cuál es el destino de tu carga? (Ciudad y país)`,
+          content: `${progressText}: Origen: ${quoteForm.origin}. Ahora, ¿cuál es el destino de tu carga? (Ciudad y país)`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
-        options = [
-          { label: 'Miami, EE.UU.', value: 'Miami, EE.UU.', icon: '📍' },
-          { label: 'Rotterdam, Países Bajos', value: 'Rotterdam, Países Bajos', icon: '📍' },
-          { label: 'Manzanillo, México', value: 'Manzanillo, México', icon: '📍' },
-        ];
+        // Mostrar opciones contextuales según el origen
+        if (quoteForm.origin?.includes('México')) {
+          options = [
+            { label: 'Miami, EE.UU.', value: 'Miami, EE.UU.', icon: '📍' },
+            { label: 'Los Ángeles, EE.UU.', value: 'Los Ángeles, EE.UU.', icon: '📍' },
+            { label: 'Shanghái, China', value: 'Shanghái, China', icon: '📍' },
+          ];
+        } else if (quoteForm.origin?.includes('China')) {
+          options = [
+            { label: 'Ciudad de México, México', value: 'Ciudad de México, México', icon: '📍' },
+            { label: 'Los Ángeles, EE.UU.', value: 'Los Ángeles, EE.UU.', icon: '📍' },
+            { label: 'Rotterdam, Países Bajos', value: 'Rotterdam, Países Bajos', icon: '📍' },
+          ];
+        } else {
+          options = [
+            { label: 'Miami, EE.UU.', value: 'Miami, EE.UU.', icon: '📍' },
+            { label: 'Rotterdam, Países Bajos', value: 'Rotterdam, Países Bajos', icon: '📍' },
+            { label: 'Manzanillo, México', value: 'Manzanillo, México', icon: '📍' },
+          ];
+        }
         break;
       case 3:
         assistantMessage = {
           id: uuidv4(),
-          content: `Destino: ${quoteForm.destination}. ¿Qué modalidad de transporte prefieres?`,
+          content: `${progressText}: Destino: ${quoteForm.destination}. ¿Qué modalidad de transporte prefieres?`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
-        options = [
-          { label: 'Marítimo', value: 'Marítimo', icon: '🚢' },
-          { label: 'Aéreo', value: 'Aéreo', icon: '✈️' },
-          { label: 'Terrestre', value: 'Terrestre', icon: '🚚' },
-        ];
+        
+        // Mostrar opciones relevantes según origen y destino
+        const origDestSameContinente = 
+          (quoteForm.origin?.includes('México') && quoteForm.destination?.includes('EE.UU.')) ||
+          (quoteForm.origin?.includes('EE.UU.') && quoteForm.destination?.includes('México'));
+        
+        if (origDestSameContinente) {
+          options = [
+            { label: 'Terrestre', value: 'Terrestre', icon: '🚚', description: 'Opción recomendada para rutas continentales' },
+            { label: 'Aéreo', value: 'Aéreo', icon: '✈️' },
+            { label: 'Marítimo', value: 'Marítimo', icon: '🚢' },
+          ];
+        } else {
+          options = [
+            { label: 'Marítimo', value: 'Marítimo', icon: '🚢', description: 'Opción recomendada para rutas intercontinentales' },
+            { label: 'Aéreo', value: 'Aéreo', icon: '✈️' },
+            { label: 'Terrestre', value: 'Terrestre', icon: '🚚' },
+          ];
+        }
         break;
       case 4:
         assistantMessage = {
           id: uuidv4(),
-          content: `Modalidad: ${quoteForm.mode === 'maritime' ? 'Marítimo 🚢' : quoteForm.mode === 'air' ? 'Aéreo ✈️' : 'Terrestre 🚚'}. ¿Cuál es el peso total de la carga? (en kg)`,
+          content: `${progressText}: Modalidad: ${quoteForm.mode === 'maritime' ? 'Marítimo 🚢' : quoteForm.mode === 'air' ? 'Aéreo ✈️' : 'Terrestre 🚚'}. ¿Cuál es el peso total de la carga? (en kg)`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
@@ -288,7 +370,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
       case 5:
         assistantMessage = {
           id: uuidv4(),
-          content: `Peso: ${quoteForm.weight}. ¿Cuál es la cantidad de bultos o contenedores?`,
+          content: `${progressText}: Peso: ${quoteForm.weight}. ¿Cuál es la cantidad de bultos o contenedores?`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
@@ -301,20 +383,30 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
       case 6:
         assistantMessage = {
           id: uuidv4(),
-          content: `Cantidad: ${quoteForm.quantity}. ¿Cuáles son las dimensiones? (largo x ancho x alto en cm)`,
+          content: `${progressText}: Cantidad: ${quoteForm.quantity}. ¿Cuáles son las dimensiones? (largo x ancho x alto en cm)`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
-        options = [
-          { label: 'Contenedor 20\'', value: 'Contenedor estándar de 20 pies', icon: '📏' },
-          { label: 'Contenedor 40\'', value: 'Contenedor estándar de 40 pies', icon: '📏' },
-          { label: 'Personalizado', value: 'Medidas personalizadas', icon: '📏' },
-        ];
+        
+        // Opciones contextuales según la cantidad seleccionada
+        if (quoteForm.quantity?.includes('contenedor')) {
+          options = [
+            { label: 'Contenedor 20\'', value: 'Contenedor estándar de 20 pies', icon: '📏' },
+            { label: 'Contenedor 40\'', value: 'Contenedor estándar de 40 pies', icon: '📏' },
+            { label: 'Personalizado', value: 'Medidas personalizadas', icon: '📏' },
+          ];
+        } else {
+          options = [
+            { label: '120x80x100', value: '120x80x100 cm (pallet estándar)', icon: '📏' },
+            { label: '60x40x30', value: '60x40x30 cm (caja mediana)', icon: '📏' },
+            { label: 'Personalizado', value: 'Medidas personalizadas', icon: '📏' },
+          ];
+        }
         break;
       case 7:
         assistantMessage = {
           id: uuidv4(),
-          content: `Dimensiones: ${quoteForm.dimensions}. ¿Qué tipo de carga es y su código HS (si lo conoces)?`,
+          content: `${progressText}: Dimensiones: ${quoteForm.dimensions}. ¿Qué tipo de carga es y su código HS (si lo conoces)?`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
@@ -322,25 +414,27 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
           { label: 'Electrónicos', value: 'Productos electrónicos', icon: '💻' },
           { label: 'Textiles', value: 'Productos textiles', icon: '👕' },
           { label: 'Alimentos', value: 'Productos alimenticios', icon: '🍎' },
+          { label: 'Información HS', value: 'Necesito ayuda con el código HS', icon: '❓', description: 'Te ayudaremos a identificar el código correcto' },
         ];
         break;
       case 8:
         assistantMessage = {
           id: uuidv4(),
-          content: `Tipo de carga: ${quoteForm.cargoType}. ¿Qué término de negociación (Incoterm) prefieres?`,
+          content: `${progressText}: Tipo de carga: ${quoteForm.cargoType}. ¿Qué término de negociación (Incoterm) prefieres?`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
         options = [
-          { label: 'FOB', value: 'FOB (Free On Board)', icon: '📄' },
-          { label: 'CIF', value: 'CIF (Cost, Insurance and Freight)', icon: '📄' },
-          { label: 'EXW', value: 'EXW (Ex Works)', icon: '📄' },
+          { label: 'FOB', value: 'FOB (Free On Board)', icon: '📄', description: 'Vendedor entrega en puerto de origen' },
+          { label: 'CIF', value: 'CIF (Cost, Insurance and Freight)', icon: '📄', description: 'Vendedor paga flete y seguro' },
+          { label: 'EXW', value: 'EXW (Ex Works)', icon: '📄', description: 'Comprador asume todos los costos' },
+          { label: 'Información', value: 'Necesito información sobre Incoterms', icon: '❓' },
         ];
         break;
       case 9:
         assistantMessage = {
           id: uuidv4(),
-          content: `Incoterm: ${quoteForm.incoterm}. ¿Tienes alguna nota o requerimiento adicional?`,
+          content: `${progressText}: Incoterm: ${quoteForm.incoterm}. ¿Tienes alguna nota o requerimiento adicional?`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
@@ -353,11 +447,28 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
       case 10:
         assistantMessage = {
           id: uuidv4(),
-          content: `¡Gracias! He recopilado todos los datos para tu cotización. Enviaré esta información a nuestro equipo y te contactaremos pronto con los detalles.`,
+          content: `✅ Cotización completada. He recopilado todos los datos para tu cotización. Ahora te proporcionaré opciones personalizadas basadas en la información proporcionada.
+
+Resumen de datos:
+• Origen: ${quoteForm.origin}
+• Destino: ${quoteForm.destination}
+• Modalidad: ${quoteForm.mode === 'maritime' ? 'Marítimo 🚢' : quoteForm.mode === 'air' ? 'Aéreo ✈️' : 'Terrestre 🚚'}
+• Peso: ${quoteForm.weight}
+• Cantidad: ${quoteForm.quantity}
+• Dimensiones: ${quoteForm.dimensions}
+• Tipo de carga: ${quoteForm.cargoType}${quoteForm.hsCode ? `\n• HS Code: ${quoteForm.hsCode}` : ''}
+• Incoterm: ${quoteForm.incoterm}${quoteForm.notes ? `\n• Notas adicionales: ${quoteForm.notes}` : ''}
+
+Con esta información, te proporcionaré una cotización personalizada y te explicaré cómo Nowports puede optimizar tu cadena de suministro.`,
           role: 'assistant',
           timestamp: Date.now().toString(),
         };
         break;
+    }
+    
+    // Añadir las opciones comunes excepto para el paso final
+    if (quoteForm.step < 10 && quoteForm.step > 1) {
+      options = [...options, ...commonOptions];
     }
     
     if (assistantMessage) {
@@ -509,7 +620,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({ theme = 'light' }) => {
     if (content.toLowerCase() === 'quiero iniciar una cotización' || content.toLowerCase().includes('cotizar envío')) {
       setQuoteForm({
         active: true,
-        step: 1
+        step: 1,
+        history: []
       });
       
       // Crear un nuevo mensaje del usuario
@@ -803,7 +915,6 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
   return (
     <div className="flex flex-col h-full">
       <div className={`${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'} p-4 rounded-t-lg shadow`}>
-        <h2 className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>Nowports Assistant</h2>
         <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
           {t('askAboutLogistics', 'Ask me about logistics, shipping routes, and how Nowports can help your business')}
         </p>
