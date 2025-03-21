@@ -864,6 +864,111 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
 
   // Manejar la selección de una respuesta rápida
   const handleQuickReplySelect = (value: string) => {
+    // Verificar si es una solicitud para actualizar el estado de un envío
+    const updateTrackingRegex = /actualizar estado del env(í|i)o ([A-Z]{3}\d{7})/i;
+    const updateMatch = value.toLowerCase().match(updateTrackingRegex);
+    
+    if (updateMatch && updateMatch[2]) {
+      const trackingCode = updateMatch[2].toUpperCase();
+      
+      // Crear un mensaje del usuario
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Simular respuesta del asistente después de un breve retraso
+      setTimeout(() => {
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: `✅ **Estado actualizado para envío ${trackingCode}**\n\n` +
+                  `He verificado los últimos datos de tu envío:\n\n` +
+                  `**Actualización:** El envío ha pasado de "En tránsito internacional" a "En trámite aduanal"\n` +
+                  `**Ubicación actual:** Terminal de Aduanas, Long Beach\n` +
+                  `**Último evento:** Arribo a puerto de destino (${new Date().toLocaleDateString()})\n` +
+                  `**Próximo paso:** Liberación aduanal\n` +
+                  `**Tiempo estimado:** 2-3 días hábiles\n\n` +
+                  `¿Deseas recibir notificaciones automáticas cuando haya cambios en el estado de este envío?`,
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          quickReplies: [
+            { label: 'Activar notificaciones', value: `Activar notificaciones para ${trackingCode}`, icon: '🔔' },
+            { label: 'Ver documentos', value: `Ver documentos del envío ${trackingCode}`, icon: '📄' },
+            { label: 'Contactar agente', value: 'Contactar con mi agente asignado', icon: '👨‍💼' }
+          ]
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 800);
+      
+      return;
+    }
+    
+    // Verificar si es una solicitud para ver documentos de un envío
+    const viewDocumentsRegex = /ver documentos del env(í|i)o ([A-Z]{3}\d{7})/i;
+    const viewDocMatch = value.toLowerCase().match(viewDocumentsRegex);
+    
+    if (viewDocMatch && viewDocMatch[2]) {
+      const trackingCode = viewDocMatch[2].toUpperCase();
+      
+      // Crear un mensaje del usuario
+      const userMessage: ChatMessage = {
+        id: uuidv4(),
+        content: value,
+        role: 'user',
+        timestamp: Date.now().toString(),
+      };
+
+      // Actualizar el chat con el mensaje del usuario
+      setChatState(prev => ({
+        ...prev,
+        messages: [...prev.messages, userMessage],
+        isLoading: true
+      }));
+
+      // Simular respuesta del asistente después de un breve retraso
+      setTimeout(() => {
+        const assistantMessage: ChatMessage = {
+          id: uuidv4(),
+          content: `📋 **Documentos disponibles para el envío ${trackingCode}**\n\n` +
+                  `Aquí tienes los documentos asociados a este embarque:`,
+          role: 'assistant',
+          timestamp: Date.now().toString(),
+          attachments: [
+            SAMPLE_DOCUMENTS.bl,
+            SAMPLE_DOCUMENTS.invoice,
+            SAMPLE_DOCUMENTS.packing
+          ],
+          quickReplies: [
+            { label: 'Actualizar estado', value: `Actualizar estado del envío ${trackingCode}`, icon: '🔄' },
+            { label: 'Descargar todos', value: 'Descargar todos los documentos', icon: '📥' },
+            { label: 'Solicitar adicionales', value: 'Necesito documentos adicionales', icon: '📋' }
+          ]
+        };
+
+        setChatState(prev => ({
+          ...prev,
+          messages: [...prev.messages, assistantMessage],
+          isLoading: false
+        }));
+      }, 800);
+      
+      return;
+    }
+    
     // Verificar si la respuesta rápida es para consultar un envío
     if (value.toLowerCase().includes('consultar un envío') || value.toLowerCase().includes('consultar envío')) {
       // Crear un mensaje del usuario 
