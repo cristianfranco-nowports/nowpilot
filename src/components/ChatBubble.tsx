@@ -98,12 +98,12 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
   // Define theme styles
   const themeStyles = {
     user: {
-      light: 'bg-blue-600 text-white',
-      dark: 'bg-blue-700 text-white'
+      light: 'bg-gradient-to-br from-blue-500 to-blue-600 text-white',
+      dark: 'bg-gradient-to-br from-blue-600 to-blue-800 text-white'
     },
     assistant: {
-      light: 'bg-gray-100 text-gray-800',
-      dark: 'bg-gray-800 text-gray-100'
+      light: 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800',
+      dark: 'bg-gradient-to-br from-gray-700 to-gray-800 text-gray-100'
     },
     time: {
       light: 'text-gray-600',
@@ -118,8 +118,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
 
   // Define bubble styles based on sender and theme
   const bubbleStyles = isUser
-    ? `max-w-[80%] rounded-2xl rounded-tr-sm px-4 py-2 ${themeStyles.user[theme]} shadow-sm`
-    : `max-w-[80%] rounded-2xl rounded-tl-sm px-4 py-2 ${themeStyles.assistant[theme]} shadow-sm`;
+    ? `max-w-[80%] rounded-2xl rounded-tr-sm px-4 py-2 ${themeStyles.user[theme]} shadow-md hover:shadow-lg transition-shadow duration-300`
+    : `max-w-[80%] rounded-2xl rounded-tl-sm px-4 py-2 ${themeStyles.assistant[theme]} shadow-md hover:shadow-lg transition-shadow duration-300`;
 
   const hasAttachments = message.attachments && message.attachments.length > 0;
   const hasQuickReplies = message.quickReplies && message.quickReplies.length > 0;
@@ -146,7 +146,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
                   li: ({ node, ...props }) => <li className="mb-1" {...props as React.LiHTMLAttributes<HTMLLIElement>} />,
                   a: ({ node, ...props }) => (
                     <a 
-                      className={`underline ${theme === 'dark' ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600 hover:text-blue-800'}`} 
+                      className={`underline ${theme === 'dark' ? 'text-blue-300 hover:text-blue-200' : 'text-blue-600 hover:text-blue-800'} transition-colors duration-200`} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       {...props as React.AnchorHTMLAttributes<HTMLAnchorElement>} 
@@ -158,7 +158,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
                   h3: ({ node, ...props }) => <h3 className="text-md font-bold mb-2" {...props as React.HTMLAttributes<HTMLHeadingElement>} />,
                   blockquote: ({ node, ...props }) => (
                     <blockquote 
-                      className={`border-l-4 ${theme === 'dark' ? 'border-gray-600 bg-gray-700/50' : 'border-gray-300 bg-gray-50'} pl-4 py-1 my-2`} 
+                      className={`border-l-4 ${theme === 'dark' ? 'border-gray-600 bg-gray-700/50' : 'border-gray-300 bg-gray-50'} pl-4 py-1 my-2 animate-fadeLeft`} 
                       {...props as React.BlockquoteHTMLAttributes<HTMLQuoteElement>} 
                     />
                   ),
@@ -167,10 +167,10 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
                     const isInline = !className || !match;
                     
                     return isInline 
-                      ? <code className={`px-1 py-0.5 rounded ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`} {...props as React.HTMLAttributes<HTMLElement>} />
-                      : <code className={`block p-2 my-2 rounded ${theme === 'dark' ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} overflow-x-auto ${className}`} {...props as React.HTMLAttributes<HTMLElement>} />
+                      ? <code className={`px-1 py-0.5 rounded ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'} transition-colors duration-200`} {...props as React.HTMLAttributes<HTMLElement>} />
+                      : <code className={`block p-2 my-2 rounded ${theme === 'dark' ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-800'} overflow-x-auto ${className} transition-colors duration-200`} {...props as React.HTMLAttributes<HTMLElement>} />
                   },
-                  pre: ({ node, ...props }) => <pre className="my-2" {...props as React.HTMLAttributes<HTMLPreElement>} />,
+                  pre: ({ node, ...props }) => <pre className="my-2 animate-fadeIn" {...props as React.HTMLAttributes<HTMLPreElement>} />,
                 }}
               >
                 {message.content}
@@ -180,12 +180,14 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
           
           {/* Documentos adjuntos */}
           {hasAttachments && (
-            <div className={`mt-3 ${isUser ? 'border-t border-blue-500' : 'border-t border-gray-300'} pt-2`}>
+            <div className={`mt-3 ${isUser ? 'border-t border-blue-500/30' : 'border-t border-gray-300/30'} pt-2 animate-fadeIn`}>
               <p className={`text-xs mb-2 ${isUser ? 'text-blue-200' : theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                 Documentos adjuntos:
               </p>
-              {message.attachments?.map((doc) => (
-                <DocumentPreview key={doc.id} document={doc} theme={theme} />
+              {message.attachments?.map((doc, idx) => (
+                <div key={doc.id} className="animate-fadeIn" style={{ animationDelay: `${idx * 0.1}s` }}>
+                  <DocumentPreview document={doc} theme={theme} />
+                </div>
               ))}
             </div>
           )}
@@ -193,7 +195,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, theme = 'light', onQui
         
         {/* Quick Replies */}
         {hasQuickReplies && onQuickReplySelect && (
-          <div className="mt-2 w-full">
+          <div className="mt-2 w-full animate-fadeIn" style={{ animationDelay: '0.2s' }}>
             <QuickReplies 
               options={message.quickReplies || []} 
               onSelect={onQuickReplySelect} 

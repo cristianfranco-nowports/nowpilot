@@ -914,20 +914,23 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
 
   return (
     <div className="flex flex-col h-full">
-      <div className={`${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-800'} p-4 rounded-t-lg shadow`}>
-        <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-          {t('askAboutLogistics', 'Ask me about logistics, shipping routes, and how Nowports can help your business')}
-        </p>
+      <div className={`${theme === 'dark' ? 'bg-gradient-to-r from-blue-800 to-blue-900' : 'bg-gradient-to-r from-blue-500 to-blue-600'} p-4 rounded-t-lg shadow flex items-center justify-center`}>
+        <div className="animate-pulse flex space-x-2">
+          <div className={`h-2 w-2 rounded-full ${theme === 'dark' ? 'bg-blue-200' : 'bg-white'}`}></div>
+          <div className={`h-2 w-2 rounded-full ${theme === 'dark' ? 'bg-blue-200' : 'bg-white'}`}></div>
+          <div className={`h-2 w-2 rounded-full ${theme === 'dark' ? 'bg-blue-200' : 'bg-white'}`}></div>
+        </div>
       </div>
       
-      <div className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`} ref={chatContainerRef}>
-        {chatState.messages.map((message) => (
-          <ChatBubble 
-            key={message.id} 
-            message={message} 
-            theme={theme}
-            onQuickReplySelect={handleQuickReplySelect}
-          />
+      <div className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'} transition-all duration-300`} ref={chatContainerRef}>
+        {chatState.messages.map((message, index) => (
+          <div key={message.id} className="transition-all duration-500 animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
+            <ChatBubble 
+              message={message} 
+              theme={theme}
+              onQuickReplySelect={handleQuickReplySelect}
+            />
+          </div>
         ))}
 
         {chatState.isLoading && (
@@ -937,21 +940,21 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
         )}
 
         {chatState.error && (
-          <div className={`text-red-500 text-sm my-2 p-2 ${theme === 'dark' ? 'bg-red-900/30' : 'bg-red-50'} rounded`}>
+          <div className={`text-red-500 text-sm my-2 p-2 ${theme === 'dark' ? 'bg-red-900/30' : 'bg-red-50'} rounded animate-shake`}>
             {chatState.error}
           </div>
         )}
 
         {/* Quick Reply options */}
         {quickReplyOptions.length > 0 && !chatState.isLoading && (
-          <div className="mt-4">
+          <div className="mt-4 animate-slideUp">
             <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Opciones rápidas:</p>
             <QuickReplies options={quickReplyOptions} onSelect={handleQuickReplySelect} theme={theme} />
           </div>
         )}
       </div>
       
-      <div className={`p-4 ${theme === 'dark' ? 'border-t border-gray-700' : 'border-t'}`}>
+      <div className={`p-4 ${theme === 'dark' ? 'border-t border-gray-700 bg-gray-800' : 'border-t bg-gray-50'} transition-all duration-300 rounded-b-lg`}>
         <ChatInput 
           onSendMessage={handleSendMessage} 
           onSendDocument={handleSendDocument}
@@ -1012,6 +1015,34 @@ Si necesitas alguna aclaración o tienes preguntas sobre este documento, por fav
             transform: scale(1);
             opacity: 0.7;
           }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .animate-slideUp {
+          animation: slideUp 0.4s ease-out forwards;
+        }
+        
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
         }
       `}</style>
     </div>
